@@ -1,56 +1,61 @@
 import { useState } from 'react'
 
-function App() {
-  const [input, setInput] = useState('')
-  const [output, setOutput] = useState('')
+type EncodingMode = 'base64' | 'url' | 'hex'
 
-  const encode = (type: string) => {
+function App() {
+  const [plain, setPlain] = useState('')
+  const [encoded, setEncoded] = useState('')
+  const [mode, setMode] = useState<EncodingMode>('base64')
+
+  const encode = () => {
     try {
       let result = ''
-      switch (type) {
+      switch (mode) {
         case 'base64':
-          result = btoa(input)
+          result = btoa(plain)
           break
         case 'url':
-          result = encodeURIComponent(input)
+          result = encodeURIComponent(plain)
           break
         case 'hex':
-          result = Array.from(input)
+          result = Array.from(plain)
             .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
             .join('')
           break
-        default:
-          result = input
       }
-      setOutput(result)
+      setEncoded(result)
     } catch (error) {
-      setOutput('Error: ' + (error as Error).message)
+      setEncoded('Error: ' + (error as Error).message)
     }
   }
 
-  const decode = (type: string) => {
+  const decode = () => {
     try {
       let result = ''
-      switch (type) {
+      switch (mode) {
         case 'base64':
-          result = atob(output)
+          result = atob(encoded)
           break
         case 'url':
-          result = decodeURIComponent(output)
+          result = decodeURIComponent(encoded)
           break
         case 'hex':
-          result = output.match(/.{1,2}/g)
+          result = encoded.match(/.{1,2}/g)
             ?.map(byte => String.fromCharCode(parseInt(byte, 16)))
             .join('') || ''
           break
-        default:
-          result = output
       }
-      setInput(result)
+      setPlain(result)
     } catch (error) {
-      setInput('Error: ' + (error as Error).message)
+      setPlain('Error: ' + (error as Error).message)
     }
   }
+
+  const encodingModes = [
+    { value: 'base64', label: 'Base64' },
+    { value: 'url', label: 'URL' },
+    { value: 'hex', label: 'Hex' },
+  ] as const
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
@@ -63,70 +68,68 @@ function App() {
         </p>
 
         <div className="space-y-4">
-          {/* Input Section */}
+          {/* Plain Text Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Input
+              Plain
             </label>
             <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
+              value={plain}
+              onChange={(e) => setPlain(e.target.value)}
               className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-              placeholder="Enter text to encode..."
+              placeholder="Enter plain text..."
             />
-            <div className="mt-4 flex gap-2 flex-wrap">
-              <button
-                onClick={() => encode('base64')}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-              >
-                Encode Base64
-              </button>
-              <button
-                onClick={() => encode('url')}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-              >
-                Encode URL
-              </button>
-              <button
-                onClick={() => encode('hex')}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-              >
-                Encode Hex
-              </button>
-            </div>
           </div>
 
-          {/* Output Section */}
+          {/* Controls Section */}
+          <div className="flex items-center justify-center gap-4">
+            {/* Encode Button */}
+            <button
+              onClick={encode}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center gap-2 font-medium shadow-md"
+            >
+              <span>Encode</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Mode Dropdown */}
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value as EncodingMode)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 font-medium bg-white shadow-md"
+            >
+              {encodingModes.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Decode Button */}
+            <button
+              onClick={decode}
+              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-2 font-medium shadow-md"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              </svg>
+              <span>Decode</span>
+            </button>
+          </div>
+
+          {/* Encoded Text Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Output
+              Encoded
             </label>
             <textarea
-              value={output}
-              onChange={(e) => setOutput(e.target.value)}
+              value={encoded}
+              onChange={(e) => setEncoded(e.target.value)}
               className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-sm"
               placeholder="Encoded result will appear here..."
             />
-            <div className="mt-4 flex gap-2 flex-wrap">
-              <button
-                onClick={() => decode('base64')}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-              >
-                Decode Base64
-              </button>
-              <button
-                onClick={() => decode('url')}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-              >
-                Decode URL
-              </button>
-              <button
-                onClick={() => decode('hex')}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-              >
-                Decode Hex
-              </button>
-            </div>
           </div>
         </div>
       </div>
