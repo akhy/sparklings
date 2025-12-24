@@ -7,6 +7,7 @@ export default {
       [
         // Apps
         'dencode',
+        'jago',
         // Shared packages
         'ui',
         'utils',
