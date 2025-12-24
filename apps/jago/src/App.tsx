@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
-import { Transaction, ParseConfig, DEFAULT_CONFIG, processPDF, ProcessResult } from './pdfProcessor'
+import { Transaction, ParseConfig, DEFAULT_CONFIG, processPDF } from './pdfProcessor'
 
 // Configure PDF.js worker (use npm package worker for offline support)
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -10,13 +10,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 
 function App() {
   const [file, setFile] = useState<File | null>(null)
-  const [pdfText, setPdfText] = useState<string>('')
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [config, setConfig] = useState<ParseConfig>(DEFAULT_CONFIG)
   const [showConfig, setShowConfig] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<keyof Transaction>('date')
+  const [sortBy, setSortBy] = useState<keyof Transaction>('timestamp')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [filterText, setFilterText] = useState('')
   const [totalPages, setTotalPages] = useState<number | null>(null)
@@ -46,7 +45,6 @@ function App() {
       const result = await processPDF(file, config)
       setTransactions(result.transactions)
       setTotalPages(result.totalPages)
-      setPdfText(result.transactions.map(t => t.rawRows.map(r => r.join(' ')).join('\n')).join('\n\n'))
     } catch (err) {
       setError('Failed to load PDF: ' + (err as Error).message)
     } finally {
@@ -79,7 +77,8 @@ function App() {
       const search = filterText.toLowerCase()
       return (
         t.description.toLowerCase().includes(search) ||
-        t.date.toLocaleDateString().includes(search) ||
+        t.note.toLowerCase().includes(search) ||
+        t.timestamp.toLowerCase().includes(search) ||
         t.amount.toString().includes(search)
       )
     })
@@ -88,14 +87,11 @@ function App() {
       const bVal = b[sortBy]
       const direction = sortDirection === 'asc' ? 1 : -1
 
-      if (aVal instanceof Date && bVal instanceof Date) {
-        return (aVal.getTime() - bVal.getTime()) * direction
-      }
-
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return (aVal - bVal) * direction
       }
 
+      // ISO 8601 timestamps sort correctly as strings
       return String(aVal).localeCompare(String(bVal)) * direction
     })
 
@@ -197,6 +193,20 @@ function App() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Timezone
+                </label>
+                <input
+                  type="text"
+                  value={config.timezone}
+                  onChange={(e) =>
+                    setConfig({ ...config, timezone: e.target.value })
+                  }
+                  placeholder="+07:00"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+                />
+              </div>
             </div>
 
             <div className="mb-4">
@@ -277,16 +287,22 @@ function App() {
                 <thead>
                   <tr className="border-b border-gray-300">
                     <th
-                      onClick={() => handleSort('date')}
+                      onClick={() => handleSort('timestamp')}
                       className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                     >
-                      Date {sortBy === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      Timestamp {sortBy === 'timestamp' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     <th
                       onClick={() => handleSort('description')}
                       className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                     >
                       Description {sortBy === 'description' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th
+                      onClick={() => handleSort('note')}
+                      className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    >
+                      Note {sortBy === 'note' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     <th
                       onClick={() => handleSort('type')}
@@ -309,39 +325,58 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTransactions.map((transaction) => (
-                    <tr
-                      key={transaction.id}
-                      className="border-b border-gray-200 hover:bg-gray-50"
-                    >
-                      <td className="px-4 py-3 text-sm">
-                        {transaction.date.toLocaleDateString('id-ID')}
-                      </td>
-                      <td className="px-4 py-3 text-sm">{transaction.description}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-1 text-xs font-semibold rounded ${
-                            transaction.type === 'debit'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-green-100 text-green-800'
+                  {filteredTransactions.map((transaction) => {
+                    // Parse ISO 8601 timestamp for display
+                    const date = transaction.timestamp ? new Date(transaction.timestamp) : null
+                    const formattedTimestamp = date
+                      ? date.toLocaleString('id-ID', {
+                          timeZone: 'Asia/Jakarta',
+                          dateStyle: 'medium',
+                          timeStyle: 'short'
+                        })
+                      : ''
+
+                    return (
+                      <tr
+                        key={transaction.id}
+                        className="border-b border-gray-200 hover:bg-gray-50"
+                      >
+                        <td className="px-4 py-3 text-sm">
+                          {formattedTimestamp}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <div>
+                            {transaction.description.split('\n').map((line, idx) => (
+                              <div key={idx}>{line}</div>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{transaction.note}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`px-2 py-1 text-xs font-semibold rounded ${
+                              transaction.type === 'debit'
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            {transaction.type}
+                          </span>
+                        </td>
+                        <td
+                          className={`px-4 py-3 text-sm text-right font-medium ${
+                            transaction.type === 'debit' ? 'text-red-600' : 'text-green-600'
                           }`}
                         >
-                          {transaction.type}
-                        </span>
-                      </td>
-                      <td
-                        className={`px-4 py-3 text-sm text-right font-medium ${
-                          transaction.type === 'debit' ? 'text-red-600' : 'text-green-600'
-                        }`}
-                      >
-                        {transaction.type === 'debit' ? '-' : '+'}Rp{' '}
-                        {Math.abs(transaction.amount).toLocaleString('id-ID')}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-right">
-                        Rp {transaction.balance.toLocaleString('id-ID')}
-                      </td>
-                    </tr>
-                  ))}
+                          {transaction.type === 'debit' ? '-' : '+'}Rp{' '}
+                          {Math.abs(transaction.amount).toLocaleString('id-ID')}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-right">
+                          Rp {transaction.balance.toLocaleString('id-ID')}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

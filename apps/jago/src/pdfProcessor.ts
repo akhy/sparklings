@@ -3,18 +3,20 @@ import parseNumericRange from 'parse-numeric-range'
 
 export interface Transaction {
   id: string
-  date: Date
+  timestamp: string // ISO 8601 with timezone (e.g., "2024-12-24T14:30:00+07:00")
   description: string
+  note: string // extra note, sometimes from the user who make the transaction
   amount: number
   balance: number
   type: 'debit' | 'credit'
-  rawRows: string[][]
+  rawData: string[][]
 }
 
 export interface ParseConfig {
   monthHeaderLocale: string | null
   skipRowPatterns: string[]
   pageSelector: string
+  timezone: string // Timezone offset for timestamps (e.g., '+07:00' for Jakarta)
 }
 
 export const DEFAULT_CONFIG: ParseConfig = {
@@ -26,6 +28,7 @@ export const DEFAULT_CONFIG: ParseConfig = {
     'www\\.jago\\.com',
   ],
   pageSelector: '1',
+  timezone: '+07:00', // Jakarta time (GMT+7)
 }
 
 // Processing pipeline functions
@@ -154,19 +157,111 @@ const groupIntoTransactions = (lines: string[][]): string[][][] => {
   return groups
 }
 
-const parseTransactionGroups = (groups: string[][][]): Transaction[] => {
-  return groups.map((rawRows, index) => {
-    // Placeholder parsing - will be implemented based on actual Bank Jago format
-    const allText = rawRows.flat().join(' ')
+const parseTransactionGroups = (groups: string[][][], timezone: string): Transaction[] => {
+  return groups.map((rawData, index) => {
+    // Flatten all rows into a single array of cells for ID/date/time extraction
+    const allCells = rawData.flat()
+
+    // Create a working array (we'll remove matched items)
+    const remaining = [...allCells]
+
+    // Pattern: ID# followed by alphanumeric
+    const idPattern = /^ID#\s*(.+)$/
+    let id = `txn-${index}`
+    const idIndex = remaining.findIndex(cell => idPattern.test(cell.trim()))
+    if (idIndex !== -1) {
+      const match = remaining[idIndex].trim().match(idPattern)
+      if (match) {
+        id = match[1].trim()
+        remaining.splice(idIndex, 1) // Remove from array
+      }
+    }
+
+    // Pattern: Date (DD MMM YYYY)
+    const datePattern = /^\d{2}\s+[A-Za-z]{3}\s+\d{4}$/
+    let dateStr = ''
+    const dateIndex = remaining.findIndex(cell => datePattern.test(cell.trim()))
+    if (dateIndex !== -1) {
+      dateStr = remaining[dateIndex].trim()
+      remaining.splice(dateIndex, 1) // Remove from array
+    }
+
+    // Pattern: Time (HH:MM)
+    const timePattern = /^\d{2}:\d{2}$/
+    let timeStr = ''
+    const timeIndex = remaining.findIndex(cell => timePattern.test(cell.trim()))
+    if (timeIndex !== -1) {
+      timeStr = remaining[timeIndex].trim()
+      remaining.splice(timeIndex, 1) // Remove from array
+    }
+
+    // Combine date and time into ISO 8601 timestamp
+    let timestamp = ''
+    if (dateStr && timeStr) {
+      // Parse date: "14 Aug 2021" -> "2021-08-14"
+      const months: {[key: string]: string} = {
+        'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
+        'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+      }
+      const [day, monthName, year] = dateStr.split(/\s+/)
+      const month = months[monthName]
+      if (month) {
+        timestamp = `${year}-${month}-${day.padStart(2, '0')}T${timeStr}:00${timezone}`
+      }
+    }
+
+    // Pattern: Amount and Balance (ONLY from first row - row [0])
+    // Indonesian locale: dot (.) = thousand separator, comma (,) = decimal separator
+    // Amount always has a sign (+ or -), balance does not
+    const amountPattern = /^[+-][\d.,]+$/  // Amount: requires sign
+    const balancePattern = /^[\d.,]+$/     // Balance: no sign
+    let amount = 0
+    let balance = 0
+
+    // Only search for amount/balance in the FIRST row (to avoid account numbers in later rows)
+    if (rawData.length > 0) {
+      const firstRow = rawData[0]
+
+      // Find amount (has sign)
+      const amountCandidate = firstRow.find(cell => amountPattern.test(cell.trim()))
+      if (amountCandidate) {
+        // Parse Indonesian number format: remove dots (thousands), replace comma with dot (decimal)
+        amount = parseFloat(amountCandidate.trim().replace(/\./g, '').replace(',', '.'))
+
+        // Remove from remaining array
+        const amountGlobalIdx = remaining.indexOf(amountCandidate)
+        if (amountGlobalIdx !== -1) remaining.splice(amountGlobalIdx, 1)
+      }
+
+      // Find balance (no sign, just numbers)
+      const balanceCandidate = firstRow.find(cell => balancePattern.test(cell.trim()) && cell.trim() !== '')
+      if (balanceCandidate) {
+        balance = parseFloat(balanceCandidate.trim().replace(/\./g, '').replace(',', '.'))
+
+        // Remove from remaining array
+        const balanceGlobalIdx = remaining.indexOf(balanceCandidate)
+        if (balanceGlobalIdx !== -1) remaining.splice(balanceGlobalIdx, 1)
+      }
+    }
+
+    // Determine type based on amount sign
+    const type: 'debit' | 'credit' = amount < 0 ? 'debit' : 'credit'
+
+    // Join remaining non-empty cells as description
+    const description = remaining
+      .map(cell => cell.trim())
+      .filter(cell => cell.length > 0)
+      .join('\n')
 
     return {
-      id: `txn-${index}`,
-      date: new Date(),
-      description: allText.substring(0, 50),
-      amount: 0,
-      balance: 0,
-      type: 'debit' as const,
-      rawRows,
+      id,
+      timestamp,
+      description,
+      note: '', // Not distinguishing note for now, all in description
+      amount,
+      balance,
+      type,
+      rawData,
     }
   })
 }
@@ -245,8 +340,7 @@ export const processPDF = async (
       .map(groupIntoLines)
       .map(createFilterRows(config))
       .map(groupIntoTransactions)
-      .map(parseTransactionGroups)
-      [0]
+      .map(groups => parseTransactionGroups(groups, config.timezone))[0]
 
     allTransactions.push(...transactions)
   }
