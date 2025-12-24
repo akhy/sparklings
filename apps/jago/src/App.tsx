@@ -16,7 +16,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<keyof Transaction>('timestamp')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [filterText, setFilterText] = useState('')
   const [totalPages, setTotalPages] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -117,8 +117,11 @@ function App() {
         <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">
           Jago
         </h1>
-        <p className="text-center text-gray-600 mb-8">
+        <p className="text-center text-gray-600 mb-2">
           Bank Jago Statement Parser
+        </p>
+        <p className="text-center text-xs text-gray-500 mb-8">
+          ✓ Works completely offline - your data never leaves your device
         </p>
 
         {/* File Upload */}
@@ -171,7 +174,7 @@ function App() {
           <div className="bg-white rounded-lg shadow-md p-6 mb-4">
             <h2 className="text-xl font-bold mb-4">Configuration</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Month Header Locale
@@ -213,6 +216,23 @@ function App() {
                     setConfig({ ...config, timezone: e.target.value })
                   }
                   placeholder="+07:00"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Y Tolerance (px)
+                </label>
+                <input
+                  type="number"
+                  value={config.yTolerance}
+                  onChange={(e) =>
+                    setConfig({ ...config, yTolerance: parseFloat(e.target.value) || 2 })
+                  }
+                  placeholder="2"
+                  min="0"
+                  max="10"
+                  step="0.5"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
               </div>
@@ -391,6 +411,30 @@ function App() {
             </div>
           </div>
         )}
+
+        {/* Footer */}
+        <footer className="mt-8 text-center text-xs text-gray-500">
+          <p>
+            Part of{' '}
+            <a
+              href="https://github.com/chickenzord/sparklings"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              Sparklings
+            </a>
+            {' '}by{' '}
+            <a
+              href="https://github.com/chickenzord"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              chickenzord
+            </a>
+          </p>
+        </footer>
       </div>
     </div>
   )

@@ -18,6 +18,7 @@ export interface ParseConfig {
   skipRowPatterns: string[]
   pageSelector: string
   timezone: string // Timezone offset for timestamps (e.g., '+07:00' for Jakarta)
+  yTolerance: number // Y-coordinate tolerance in pixels for grouping items into same line
 }
 
 export const DEFAULT_CONFIG: ParseConfig = {
@@ -27,10 +28,17 @@ export const DEFAULT_CONFIG: ParseConfig = {
     'also a member of Indonesia Deposit Insurance Corporation',
     'PT Bank Jago Tbk is licensed',
     'www\\.jago\\.com',
+    'Disclaimer',
+    'This document is your list of Jago Transaction History',
+    'based on search result and filter Customer has applied',
   ],
   pageSelector: '1',
   timezone: '+07:00', // Jakarta time (GMT+7)
+  yTolerance: 10, // 10 pixels tolerance for Y-coordinate grouping
 }
+
+// Debug/Development toggles
+const REMOVE_EMPTY_CELLS = false
 
 // Processing pipeline functions
 const extractTextItems = (textContent: any) => {
@@ -41,17 +49,44 @@ const extractTextItems = (textContent: any) => {
   return textContent.items
 }
 
-const groupIntoLines = (items: any[]): string[][] => {
-  const lines: { [key: number]: string[] } = {}
-  items.forEach((item: any) => {
-    const y = Math.round(item.transform[5])
-    if (!lines[y]) lines[y] = []
-    lines[y].push(item.str)
+const createGroupIntoLines = (yTolerance: number) => (items: any[]): string[][] => {
+  // Sort items by Y-coordinate (top to bottom)
+  const sortedItems = items
+    .map((item: any) => ({
+      x: item.transform[4],
+      y: item.transform[5],
+      str: item.str
+    }))
+    .sort((a, b) => b.y - a.y) // Higher Y = top of page
+
+  // Group items into lines using Y-tolerance
+  const lines: Array<Array<{ x: number; y: number; str: string }>> = []
+
+  sortedItems.forEach(item => {
+    // Find a line with similar Y-coordinate
+    const matchingLine = lines.find(line => {
+      const lineY = line[0].y
+      return Math.abs(item.y - lineY) <= yTolerance
+    })
+
+    if (matchingLine) {
+      matchingLine.push({ x: item.x, y: item.y, str: item.str })
+    } else {
+      // Create new line
+      lines.push([{ x: item.x, y: item.y, str: item.str }])
+    }
   })
 
-  const sortedLines = Object.keys(lines)
-    .sort((a, b) => parseInt(b) - parseInt(a))
-    .map(y => lines[parseInt(y)])
+  // Sort each line by X-coordinate (left to right) and extract strings
+  const sortedLines = lines.map(line => {
+    const sorted = line
+      .sort((a, b) => a.x - b.x)
+      .map(item => item.str)
+
+    return REMOVE_EMPTY_CELLS
+      ? sorted.filter(cell => cell.trim() !== '')
+      : sorted
+  })
 
   console.log('\n=== LINES AS 2D ARRAY (columns preserved) ===')
   sortedLines.forEach((columns, index) => {
@@ -110,38 +145,26 @@ const groupIntoTransactions = (lines: string[][]): string[][][] => {
   const datePattern = /^\d{2}\s+[A-Za-z]{3}\s+\d{4}$/
   const groups: string[][][] = []
   let currentGroup: string[][] = []
-  let inGroup = false
-  let rowsAfterEndMarker = 0
-  const BUFFER_ROWS = 3
 
   for (const columns of lines) {
     const hasDateMarker = columns.some(cell => datePattern.test(cell.trim()))
-    const hasEndMarker = columns.some(cell => cell.trim().startsWith('ID#'))
 
     if (hasDateMarker) {
+      // Date marker starts a new transaction
+      // Push previous transaction if it exists
       if (currentGroup.length > 0) {
         groups.push(currentGroup)
       }
+      // Start new transaction with this row
       currentGroup = [columns]
-      inGroup = true
-      rowsAfterEndMarker = 0
-    } else if (inGroup) {
+    } else if (currentGroup.length > 0) {
+      // Continue adding rows to current transaction
       currentGroup.push(columns)
-
-      if (hasEndMarker) {
-        rowsAfterEndMarker = 1
-      } else if (rowsAfterEndMarker > 0) {
-        rowsAfterEndMarker++
-        if (rowsAfterEndMarker > BUFFER_ROWS) {
-          groups.push(currentGroup)
-          currentGroup = []
-          inGroup = false
-          rowsAfterEndMarker = 0
-        }
-      }
     }
+    // else: no current transaction and no date marker, skip this row
   }
 
+  // Push the last transaction
   if (currentGroup.length > 0) {
     groups.push(currentGroup)
   }
@@ -339,7 +362,7 @@ export const processPDF = async (
     // Functional pipeline
     const transactions = [textContent]
       .map(extractTextItems)
-      .map(groupIntoLines)
+      .map(createGroupIntoLines(config.yTolerance))
       .map(createFilterRows(config))
       .map(groupIntoTransactions)
       .map(groups => parseTransactionGroups(groups, config.timezone))[0]
