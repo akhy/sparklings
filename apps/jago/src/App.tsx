@@ -87,12 +87,21 @@ function App() {
       const bVal = b[sortBy]
       const direction = sortDirection === 'asc' ? 1 : -1
 
+      let result = 0
+
       if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return (aVal - bVal) * direction
+        result = (aVal - bVal) * direction
+      } else {
+        // ISO 8601 timestamps sort correctly as strings
+        result = String(aVal).localeCompare(String(bVal)) * direction
       }
 
-      // ISO 8601 timestamps sort correctly as strings
-      return String(aVal).localeCompare(String(bVal)) * direction
+      // Use index as tiebreaker for stable sorting (respects sort direction)
+      if (result === 0) {
+        return (a.index - b.index) * direction
+      }
+
+      return result
     })
 
   const totalDebits = transactions

@@ -9,6 +9,7 @@ export interface Transaction {
   amount: number
   balance: number
   type: 'debit' | 'credit'
+  index: number // Original index in the page for stable sorting
   rawData: string[][]
 }
 
@@ -261,6 +262,7 @@ const parseTransactionGroups = (groups: string[][][], timezone: string): Transac
       amount,
       balance,
       type,
+      index, // Original index for stable sorting
       rawData,
     }
   })
