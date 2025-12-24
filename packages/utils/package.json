@@ -6,11 +6,12 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "lint": "eslint . --ext ts",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest"
   },
   "devDependencies": {
+    "@sparklings/config": "workspace:*",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   }
