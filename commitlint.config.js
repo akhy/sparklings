@@ -8,6 +8,7 @@ export default {
         // Apps
         'dencode',
         'jago',
+        'noktp',
         // Shared packages
         'ui',
         'utils',
