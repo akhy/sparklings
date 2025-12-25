@@ -101,7 +101,7 @@ export const getFullBirthDate = (parsed: NIKParsed): Date => {
   return new Date(fullYear, parseInt(parsed.birthMonth) - 1, parseInt(parsed.birthDate))
 }
 
-export const formatBirthDate = (parsed: NIKParsed): string => {
+export const formatBirthDate = (parsed: NIKParsed, locale: string = 'en-US'): string => {
   const dateObj = getFullBirthDate(parsed)
   const options: Intl.DateTimeFormatOptions = {
     weekday: 'long',
@@ -109,5 +109,5 @@ export const formatBirthDate = (parsed: NIKParsed): string => {
     month: 'long',
     day: 'numeric'
   }
-  return dateObj.toLocaleDateString('en-US', options)
+  return dateObj.toLocaleDateString(locale, options)
 }

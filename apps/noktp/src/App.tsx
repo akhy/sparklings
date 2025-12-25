@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react'
 import { Attribution } from '@sparklings/ui'
 import { NIKParsed, parseNIK, formatNIK, formatBirthDate } from './nikParser'
 import { LocationData, getLocationData } from './locationService'
+import { useLanguage } from './useLanguage'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 function App() {
+  const { language, setLanguage, t } = useLanguage()
   const [nik, setNik] = useState('')
   const [parsed, setParsed] = useState<NIKParsed | null>(null)
   const [location, setLocation] = useState<LocationData | null>(null)
@@ -49,24 +52,29 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">
-          NoKTP
-        </h1>
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex-1">
+            <h1 className="text-4xl font-bold text-center text-gray-800">
+              {t('title')}
+            </h1>
+          </div>
+          <LanguageSwitcher language={language} onLanguageChange={setLanguage} />
+        </div>
         <p className="text-center text-gray-600 mb-8">
-          Indonesian NIK (KTP Number) Breakdown
+          {t('subtitle')}
         </p>
 
         {/* Input Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Enter NIK (16 digits)
+            {t('inputLabel')}
           </label>
           <input
             type="text"
             value={formatNIK(nik)}
             onChange={(e) => handleInputChange(e.target.value.replace(/\s/g, ''))}
             maxLength={18} // 16 digits + 2 spaces
-            placeholder="XXXXXX XXXXXX XXXX"
+            placeholder={t('inputPlaceholder')}
             className="w-full px-4 py-3 text-2xl font-mono border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -80,36 +88,36 @@ function App() {
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Valid NIK
+                  {t('validNik')}
                 </div>
 
                 {/* Visual Breakdown */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Location */}
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Location</h3>
+                    <h3 className="text-sm font-semibold text-gray-500 mb-3">{t('location')}</h3>
                     {loadingLocation ? (
                       <div className="text-center py-4 text-gray-500">
-                        <div className="animate-pulse">Loading location data...</div>
+                        <div className="animate-pulse">{t('loadingLocation')}</div>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Province ({parsed.provinceCode})</div>
+                          <div className="text-xs text-gray-500 mb-1">{t('province')} ({parsed.provinceCode})</div>
                           <div className="font-semibold text-gray-800">
-                            {location?.provinceName || 'Unknown'}
+                            {location?.provinceName || t('unknown')}
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">Regency/City ({parsed.regencyCode})</div>
+                          <div className="text-xs text-gray-500 mb-1">{t('regency')} ({parsed.regencyCode})</div>
                           <div className="font-semibold text-gray-800">
-                            {location?.regencyName || 'Unknown'}
+                            {location?.regencyName || t('unknown')}
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500 mb-1">District ({parsed.districtCode})</div>
+                          <div className="text-xs text-gray-500 mb-1">{t('district')} ({parsed.districtCode})</div>
                           <div className="font-semibold text-gray-800">
-                            {location?.districtName || 'Unknown'}
+                            {location?.districtName || t('unknown')}
                           </div>
                         </div>
                         {location?.error && (
@@ -123,18 +131,18 @@ function App() {
 
                   {/* Birth Info */}
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Birth Information</h3>
+                    <h3 className="text-sm font-semibold text-gray-500 mb-3">{t('birthInfo')}</h3>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Date:</span>
+                        <span className="text-gray-600">{t('date')}:</span>
                         <span className="font-mono font-semibold">{parsed.birthDate}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Month:</span>
+                        <span className="text-gray-600">{t('month')}:</span>
                         <span className="font-mono font-semibold">{parsed.birthMonth}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Year:</span>
+                        <span className="text-gray-600">{t('year')}:</span>
                         <span className="font-mono font-semibold">
                           {parsed.birthYear} ({parseInt(parsed.birthYear) >= 25 ? '19' : '20'}{parsed.birthYear})
                         </span>
@@ -143,7 +151,7 @@ function App() {
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <div className="text-center">
                         <div className="text-2xl font-bold text-gray-800">
-                          {formatBirthDate(parsed)}
+                          {formatBirthDate(parsed, language === 'id' ? 'id-ID' : 'en-US')}
                         </div>
                       </div>
                     </div>
@@ -151,30 +159,30 @@ function App() {
 
                   {/* Gender */}
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Gender</h3>
+                    <h3 className="text-sm font-semibold text-gray-500 mb-3">{t('gender')}</h3>
                     <div className={`text-2xl font-bold ${parsed.gender === 'male' ? 'text-blue-600' : 'text-pink-600'}`}>
-                      {parsed.gender === 'male' ? '♂ Male' : '♀ Female'}
+                      {parsed.gender === 'male' ? t('male') : t('female')}
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      {parsed.gender === 'female' && 'Birth date + 40 indicates female'}
+                      {parsed.gender === 'female' && t('femaleNote')}
                     </p>
                   </div>
 
                   {/* Serial Number */}
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Serial Number</h3>
+                    <h3 className="text-sm font-semibold text-gray-500 mb-3">{t('serialNumber')}</h3>
                     <div className="text-2xl font-mono font-bold text-gray-800">
                       {parsed.serialNumber}
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Unique registration number
+                      {t('serialNote')}
                     </p>
                   </div>
                 </div>
 
                 {/* Visual NIK Breakdown */}
                 <div className="border-t border-gray-200 pt-4">
-                  <h3 className="text-sm font-semibold text-gray-500 mb-3">Visual Breakdown</h3>
+                  <h3 className="text-sm font-semibold text-gray-500 mb-3">{t('visualBreakdown')}</h3>
                   <div className="flex flex-wrap gap-1 font-mono text-sm">
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">{parsed.provinceCode}</span>
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">{parsed.regencyCode}</span>
@@ -187,15 +195,15 @@ function App() {
                   <div className="flex flex-wrap gap-4 mt-2 text-xs text-gray-600">
                     <div className="flex items-center gap-1">
                       <span className="w-3 h-3 bg-blue-100 rounded"></span>
-                      Location
+                      {t('location')}
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="w-3 h-3 bg-green-100 rounded"></span>
-                      Birth Date
+                      {t('birthInfo')}
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="w-3 h-3 bg-purple-100 rounded"></span>
-                      Serial
+                      {t('serialNumber')}
                     </div>
                   </div>
                 </div>
@@ -206,7 +214,7 @@ function App() {
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  Invalid NIK
+                  {t('invalidNik')}
                 </div>
                 <ul className="list-disc list-inside text-red-600 text-sm">
                   {parsed.errors.map((error, index) => (
@@ -220,23 +228,21 @@ function App() {
 
         {/* Information */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-blue-800 mb-2">About NIK</h3>
+          <h3 className="font-semibold text-blue-800 mb-2">{t('aboutTitle')}</h3>
           <div className="text-sm text-blue-700 space-y-1">
-            <p>• NIK (Nomor Induk Kependudukan) is a 16-digit unique identifier on Indonesian KTP</p>
-            <p>• First 6 digits: Administrative location code (Province, Regency, District)</p>
-            <p>• Next 6 digits: Date of birth in DDMMYY format</p>
-            <p>• For females, 40 is added to the birth date (e.g., 47 = 7th day, female)</p>
-            <p>• Last 4 digits: Unique serial registration number</p>
-            <p>• Location names are fetched from <a href="https://ibnux.github.io/data-indonesia/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-900">Data Indonesia API</a></p>
+            <p>• {t('aboutNik1')}</p>
+            <p>• {t('aboutNik2')}</p>
+            <p>• {t('aboutNik3')}</p>
+            <p>• {t('aboutNik4')}</p>
+            <p>• {t('aboutNik5')}</p>
+            <p>• {t('aboutNik6')} <a href="https://ibnux.github.io/data-indonesia/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-900">Data Indonesia API</a></p>
           </div>
         </div>
 
         {/* Footer */}
         <footer className="mt-8 text-center text-xs text-gray-500 space-y-2">
           <p className="text-gray-400">
-            Disclaimer: This tool is for educational purposes only. NIK parsing happens locally in your browser.
-            Only location codes (first 6 digits) are used to fetch location names from an external API.
-            Your full NIK is never transmitted or stored.
+            {t('disclaimer')}
           </p>
           <p>
             <Attribution appName="noktp" />
