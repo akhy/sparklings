@@ -10,6 +10,7 @@ export function Attribution({ appName }: AttributionProps) {
         href="https://github.com/chickenzord/sparklings"
         target="_blank"
         rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800"
       >
         Sparklings
       </a>
@@ -18,6 +19,7 @@ export function Attribution({ appName }: AttributionProps) {
         href="https://github.com/akhy"
         target="_blank"
         rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800"
       >
         akhy
       </a>
@@ -28,6 +30,7 @@ export function Attribution({ appName }: AttributionProps) {
             href={`https://github.com/chickenzord/sparklings/tree/main/apps/${appName}`}
             target="_blank"
             rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800"
           >
             source code
           </a>
