@@ -71,6 +71,51 @@ function App() {
     }
   }
 
+  const exportToCSV = () => {
+    if (filteredTransactions.length === 0) return
+
+    // CSV headers
+    const headers = ['Timestamp', 'ID', 'Type', 'Amount', 'Balance', 'Description', 'Note']
+
+    // Convert transactions to CSV rows
+    // Note: filteredTransactions is already sorted according to current sort settings
+    const rows = filteredTransactions.map(t => [
+      t.timestamp,
+      t.id,
+      t.type,
+      t.amount.toString(),
+      t.balance.toString(),
+      // Properly escape for CSV: quote fields and escape internal quotes
+      // Newlines are preserved inside quoted fields (standard CSV format per RFC 4180)
+      `"${t.description.replace(/"/g, '""')}"`,
+      `"${t.note.replace(/"/g, '""')}"`,
+    ])
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n')
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+
+    // Generate filename from original PDF name
+    const csvFilename = file
+      ? file.name.replace(/\.pdf$/i, '.csv')
+      : 'transactions.csv'
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', csvFilename)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   const filteredTransactions = transactions
     .filter(t => {
       if (!filterText) return true
@@ -326,9 +371,16 @@ function App() {
                 onChange={(e) => setFilterText(e.target.value)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-md"
               />
-              <span className="text-gray-600 text-sm">
+              <span className="text-gray-600 text-sm whitespace-nowrap">
                 Showing {filteredTransactions.length} of {transactions.length}
               </span>
+              <button
+                onClick={exportToCSV}
+                disabled={filteredTransactions.length === 0}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                Export CSV
+              </button>
             </div>
 
             <div className="overflow-x-auto">
