@@ -175,7 +175,7 @@ function App() {
           <div className="bg-white rounded-lg shadow-md p-6 mb-4">
             <h2 className="text-xl font-bold mb-4">Configuration</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Month Header Locale
@@ -228,11 +228,28 @@ function App() {
                   type="number"
                   value={config.yTolerance}
                   onChange={(e) =>
-                    setConfig({ ...config, yTolerance: parseFloat(e.target.value) || 2 })
+                    setConfig({ ...config, yTolerance: parseFloat(e.target.value) || 10 })
                   }
-                  placeholder="2"
+                  placeholder="10"
                   min="0"
-                  max="10"
+                  max="20"
+                  step="0.5"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  X Tolerance (px)
+                </label>
+                <input
+                  type="number"
+                  value={config.xTolerance}
+                  onChange={(e) =>
+                    setConfig({ ...config, xTolerance: parseFloat(e.target.value) || 5 })
+                  }
+                  placeholder="5"
+                  min="0"
+                  max="20"
                   step="0.5"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />

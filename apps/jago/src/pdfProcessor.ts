@@ -19,6 +19,7 @@ export interface ParseConfig {
   pageSelector: string
   timezone: string // Timezone offset for timestamps (e.g., '+07:00' for Jakarta)
   yTolerance: number // Y-coordinate tolerance in pixels for grouping items into same line
+  xTolerance: number // X-coordinate tolerance in pixels for detecting same column (merging wrapped text)
 }
 
 export const DEFAULT_CONFIG: ParseConfig = {
@@ -35,10 +36,28 @@ export const DEFAULT_CONFIG: ParseConfig = {
   pageSelector: '1',
   timezone: '+07:00', // Jakarta time (GMT+7)
   yTolerance: 10, // 10 pixels tolerance for Y-coordinate grouping
+  xTolerance: 5, // 5 pixels tolerance for X-coordinate column alignment
 }
 
 // Debug/Development toggles
 const REMOVE_EMPTY_CELLS = false
+
+// Shared patterns for critical transaction fields
+const PATTERNS = {
+  date: /^\d{2}\s+[A-Za-z]{3}\s+\d{4}$/,
+  time: /^\d{2}:\d{2}$/,
+  amount: /^[+-][\d.,]+$/,  // Has sign
+  balance: /^[\d.,]+$/,     // No sign
+  id: /^ID#\s*(.+)$/,
+} as const
+
+// Internal types for preserving X-coordinates through the pipeline
+interface CellWithPosition {
+  x: number
+  str: string
+}
+type RowWithPositions = CellWithPosition[]
+type LinesWithPositions = RowWithPositions[]
 
 // Processing pipeline functions
 const extractTextItems = (textContent: any) => {
@@ -49,7 +68,7 @@ const extractTextItems = (textContent: any) => {
   return textContent.items
 }
 
-const createGroupIntoLines = (yTolerance: number) => (items: any[]): string[][] => {
+const createGroupIntoLines = (yTolerance: number) => (items: any[]): LinesWithPositions => {
   // Sort items by Y-coordinate (top to bottom)
   const sortedItems = items
     .map((item: any) => ({
@@ -77,26 +96,27 @@ const createGroupIntoLines = (yTolerance: number) => (items: any[]): string[][] 
     }
   })
 
-  // Sort each line by X-coordinate (left to right) and extract strings
-  const sortedLines = lines.map(line => {
-    const sorted = line
-      .sort((a, b) => a.x - b.x)
-      .map(item => item.str)
+  // Sort each line by X-coordinate (left to right) and preserve X-coordinates
+  const sortedLines: LinesWithPositions = lines.map(line => {
+    const sorted = line.sort((a, b) => a.x - b.x)
+
+    const withPositions: RowWithPositions = sorted.map(item => ({ x: item.x, str: item.str }))
 
     return REMOVE_EMPTY_CELLS
-      ? sorted.filter(cell => cell.trim() !== '')
-      : sorted
+      ? withPositions.filter(cell => cell.str.trim() !== '')
+      : withPositions
   })
 
   console.log('\n=== LINES AS 2D ARRAY (columns preserved) ===')
   sortedLines.forEach((columns, index) => {
-    console.log(`[${index}]`, columns)
+    const strings = columns.map(c => c.str)
+    console.log(`[${index}]`, strings)
   })
 
   return sortedLines
 }
 
-const createFilterRows = (config: ParseConfig) => (lines: string[][]): string[][] => {
+const createFilterRows = (config: ParseConfig) => (lines: LinesWithPositions): LinesWithPositions => {
   const localeMonthNames: { [key: string]: string[] } = {
     'en': ['January', 'February', 'March', 'April', 'May', 'June',
            'July', 'August', 'September', 'October', 'November', 'December'],
@@ -120,7 +140,7 @@ const createFilterRows = (config: ParseConfig) => (lines: string[][]): string[][
     .filter((p): p is RegExp => p !== null)
 
   const filtered = lines.filter((columns) => {
-    const rowText = columns.join(' ').trim()
+    const rowText = columns.map(c => c.str).join(' ').trim()
 
     if (monthHeaderPattern && monthHeaderPattern.test(rowText)) {
       console.log(`[SKIP] Month header: "${rowText}"`)
@@ -141,13 +161,13 @@ const createFilterRows = (config: ParseConfig) => (lines: string[][]): string[][
   return filtered
 }
 
-const groupIntoTransactions = (lines: string[][]): string[][][] => {
+const groupIntoTransactions = (lines: LinesWithPositions): Array<LinesWithPositions> => {
   const datePattern = /^\d{2}\s+[A-Za-z]{3}\s+\d{4}$/
-  const groups: string[][][] = []
-  let currentGroup: string[][] = []
+  const groups: Array<LinesWithPositions> = []
+  let currentGroup: LinesWithPositions = []
 
   for (const columns of lines) {
-    const hasDateMarker = columns.some(cell => datePattern.test(cell.trim()))
+    const hasDateMarker = columns.some(cell => datePattern.test(cell.str.trim()))
 
     if (hasDateMarker) {
       // Date marker starts a new transaction
@@ -174,11 +194,85 @@ const groupIntoTransactions = (lines: string[][]): string[][][] => {
   groups.forEach((group, index) => {
     console.log(`\n--- Transaction ${index + 1} ---`)
     group.forEach((row, rowIndex) => {
-      console.log(`  [${rowIndex}]`, row)
+      const strings = row.map(c => c.str)
+      console.log(`  [${rowIndex}]`, strings)
     })
   })
 
   return groups
+}
+
+const mergeWrappedText = (xTolerance: number) => (groups: Array<LinesWithPositions>): string[][][] => {
+  const isCriticalField = (str: string): boolean => {
+    const trimmed = str.trim()
+    return (
+      PATTERNS.date.test(trimmed) ||
+      PATTERNS.time.test(trimmed) ||
+      PATTERNS.amount.test(trimmed) ||
+      PATTERNS.balance.test(trimmed) ||
+      PATTERNS.id.test(trimmed)
+    )
+  }
+
+  return groups.map(transactionGroup => {
+    if (transactionGroup.length === 0) return []
+
+    // Build merged rows
+    const mergedRows: RowWithPositions[] = []
+
+    for (let rowIdx = 0; rowIdx < transactionGroup.length; rowIdx++) {
+      const currentRow = transactionGroup[rowIdx]
+
+      if (rowIdx === 0) {
+        // First row becomes the base
+        mergedRows.push([...currentRow])
+      } else {
+        // For continuation rows, try to merge cells into existing rows
+        for (const cell of currentRow) {
+          // Skip empty cells
+          if (cell.str.trim() === '') continue
+
+          // Don't merge critical fields - add them as a new row instead
+          if (isCriticalField(cell.str)) {
+            // Find if we already have a row for this continuation
+            // For simplicity, create a new row for critical fields in continuation
+            const existingContinuationRow = mergedRows[rowIdx]
+            if (existingContinuationRow) {
+              existingContinuationRow.push(cell)
+            } else {
+              mergedRows[rowIdx] = [cell]
+            }
+            continue
+          }
+
+          // Find the closest cell in the first row (base row) by X-coordinate
+          let closestCellIdx = 0
+          let minDistance = Math.abs(mergedRows[0][0].x - cell.x)
+
+          for (let i = 0; i < mergedRows[0].length; i++) {
+            const distance = Math.abs(mergedRows[0][i].x - cell.x)
+            if (distance < minDistance) {
+              minDistance = distance
+              closestCellIdx = i
+            }
+          }
+
+          // Merge if within tolerance
+          if (minDistance <= xTolerance) {
+            mergedRows[0][closestCellIdx].str += '\n' + cell.str
+          } else {
+            // Too far from any column, preserve as new cell
+            mergedRows[0].push(cell)
+          }
+        }
+      }
+    }
+
+    // Convert RowWithPositions[] to string[][] for backward compatibility
+    const stringRows = mergedRows.map(row => row.map(cell => cell.str))
+
+    return stringRows
+  })
 }
 
 const parseTransactionGroups = (groups: string[][][], timezone: string): Transaction[] => {
@@ -189,31 +283,28 @@ const parseTransactionGroups = (groups: string[][][], timezone: string): Transac
     // Create a working array (we'll remove matched items)
     const remaining = [...allCells]
 
-    // Pattern: ID# followed by alphanumeric
-    const idPattern = /^ID#\s*(.+)$/
+    // Extract ID using shared pattern
     let id = `txn-${index}`
-    const idIndex = remaining.findIndex(cell => idPattern.test(cell.trim()))
+    const idIndex = remaining.findIndex(cell => PATTERNS.id.test(cell.trim()))
     if (idIndex !== -1) {
-      const match = remaining[idIndex].trim().match(idPattern)
+      const match = remaining[idIndex].trim().match(PATTERNS.id)
       if (match) {
         id = match[1].trim()
         remaining.splice(idIndex, 1) // Remove from array
       }
     }
 
-    // Pattern: Date (DD MMM YYYY)
-    const datePattern = /^\d{2}\s+[A-Za-z]{3}\s+\d{4}$/
+    // Extract Date using shared pattern
     let dateStr = ''
-    const dateIndex = remaining.findIndex(cell => datePattern.test(cell.trim()))
+    const dateIndex = remaining.findIndex(cell => PATTERNS.date.test(cell.trim()))
     if (dateIndex !== -1) {
       dateStr = remaining[dateIndex].trim()
       remaining.splice(dateIndex, 1) // Remove from array
     }
 
-    // Pattern: Time (HH:MM)
-    const timePattern = /^\d{2}:\d{2}$/
+    // Extract Time using shared pattern
     let timeStr = ''
-    const timeIndex = remaining.findIndex(cell => timePattern.test(cell.trim()))
+    const timeIndex = remaining.findIndex(cell => PATTERNS.time.test(cell.trim()))
     if (timeIndex !== -1) {
       timeStr = remaining[timeIndex].trim()
       remaining.splice(timeIndex, 1) // Remove from array
@@ -234,11 +325,9 @@ const parseTransactionGroups = (groups: string[][][], timezone: string): Transac
       }
     }
 
-    // Pattern: Amount and Balance (ONLY from first row - row [0])
+    // Extract Amount and Balance (ONLY from first row - row [0]) using shared patterns
     // Indonesian locale: dot (.) = thousand separator, comma (,) = decimal separator
     // Amount always has a sign (+ or -), balance does not
-    const amountPattern = /^[+-][\d.,]+$/  // Amount: requires sign
-    const balancePattern = /^[\d.,]+$/     // Balance: no sign
     let amount = 0
     let balance = 0
 
@@ -246,8 +335,8 @@ const parseTransactionGroups = (groups: string[][][], timezone: string): Transac
     if (rawData.length > 0) {
       const firstRow = rawData[0]
 
-      // Find amount (has sign)
-      const amountCandidate = firstRow.find(cell => amountPattern.test(cell.trim()))
+      // Find amount (has sign) using shared pattern
+      const amountCandidate = firstRow.find(cell => PATTERNS.amount.test(cell.trim()))
       if (amountCandidate) {
         // Parse Indonesian number format: remove dots (thousands), replace comma with dot (decimal)
         amount = parseFloat(amountCandidate.trim().replace(/\./g, '').replace(',', '.'))
@@ -257,8 +346,8 @@ const parseTransactionGroups = (groups: string[][][], timezone: string): Transac
         if (amountGlobalIdx !== -1) remaining.splice(amountGlobalIdx, 1)
       }
 
-      // Find balance (no sign, just numbers)
-      const balanceCandidate = firstRow.find(cell => balancePattern.test(cell.trim()) && cell.trim() !== '')
+      // Find balance (no sign, just numbers) using shared pattern
+      const balanceCandidate = firstRow.find(cell => PATTERNS.balance.test(cell.trim()) && cell.trim() !== '')
       if (balanceCandidate) {
         balance = parseFloat(balanceCandidate.trim().replace(/\./g, '').replace(',', '.'))
 
@@ -365,6 +454,7 @@ export const processPDF = async (
       .map(createGroupIntoLines(config.yTolerance))
       .map(createFilterRows(config))
       .map(groupIntoTransactions)
+      .map(mergeWrappedText(config.xTolerance))
       .map(groups => parseTransactionGroups(groups, config.timezone))[0]
 
     allTransactions.push(...transactions)
