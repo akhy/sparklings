@@ -1,4 +1,4 @@
-# sparklings
+# ✨ sparklings ✨
 
 Just some random mini apps for the fun.
 
