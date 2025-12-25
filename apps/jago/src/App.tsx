@@ -121,7 +121,8 @@ function App() {
           Bank Jago Statement Parser
         </p>
         <p className="text-center text-xs text-gray-500 mb-8">
-          ✓ Works completely offline - your data never leaves your device
+          ⛓️‍💥 Works completely offline - your data never leaves your device
+          (<a href="https://github.com/chickenzord/sparklings/tree/main/apps/jago" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">source code</a>)
         </p>
 
         {/* File Upload */}
@@ -426,12 +427,12 @@ function App() {
             </a>
             {' '}by{' '}
             <a
-              href="https://github.com/chickenzord"
+              href="https://github.com/akhy"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline"
             >
-              chickenzord
+              akhy
             </a>
           </p>
         </footer>
