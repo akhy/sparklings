@@ -16,10 +16,10 @@ catalogs:
       specifier: ^9.17.0
       version: 9.39.2
     '@types/react':
-      specifier: ^18.3.12
+      specifier: ^19.2.7
       version: 18.3.27
     '@types/react-dom':
-      specifier: ^18.3.1
+      specifier: ^19.2.3
       version: 18.3.7
     '@vitejs/plugin-react':
       specifier: ^4.3.4
@@ -52,10 +52,10 @@ catalogs:
       specifier: ^8.4.49
       version: 8.5.6
     react:
-      specifier: ^18.3.1
+      specifier: ^19.2.7
       version: 18.3.1
     react-dom:
-      specifier: ^18.3.1
+      specifier: ^19.2.3
       version: 18.3.1
     tailwindcss:
       specifier: ^3.4.17
@@ -70,10 +70,10 @@ catalogs:
       specifier: ^8.18.1
       version: 8.50.1
     vite:
-      specifier: ^6.0.3
+      specifier: ^7.3.0
       version: 6.4.1
     vitest:
-      specifier: ^2.1.8
+      specifier: ^4.0.16
       version: 2.1.9
     wrangler:
       specifier: ^4.54.0
