@@ -117,12 +117,8 @@ function App() {
         <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">
           Jago
         </h1>
-        <p className="text-center text-gray-600 mb-2">
+        <p className="text-center text-gray-600 mb-8">
           Bank Jago Statement Parser
-        </p>
-        <p className="text-center text-xs text-gray-500 mb-8">
-          ⛓️‍💥 Works completely offline - your data never leaves your device
-          (<a href="https://github.com/chickenzord/sparklings/tree/main/apps/jago" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">source code</a>)
         </p>
 
         {/* File Upload */}
@@ -437,8 +433,18 @@ function App() {
         )}
 
         {/* Footer */}
-        <footer className="mt-8 text-center text-xs text-gray-500">
+        <footer className="mt-8 text-center text-xs text-gray-500 space-y-2">
+          <p className="text-gray-400">
+            Disclaimer: This tool is not affiliated with PT Bank Jago Tbk in any way.
+            The author holds no responsibility for any issues arising from the use of this tool.
+          </p>
+
           <p>
+            Works completely offline - your data never leaves your device
+          </p>
+
+          <p>
+            ✨
             Part of{' '}
             <a
               href="https://github.com/chickenzord/sparklings"
@@ -457,6 +463,8 @@ function App() {
             >
               akhy
             </a>
+            {' '}
+            (<a href="https://github.com/chickenzord/sparklings/tree/main/apps/jago" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">source code</a>)
           </p>
         </footer>
       </div>
