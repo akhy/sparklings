@@ -191,6 +191,7 @@ function App() {
                   <option value="en">English</option>
                   <option value="id">Indonesian</option>
                 </select>
+                <p className="mt-1 text-xs text-gray-500">Filter out month section headers</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -205,6 +206,7 @@ function App() {
                   placeholder="all, 1-5, 1,3-5"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
+                <p className="mt-1 text-xs text-gray-500">e.g., 'all', '1-5', '1,3-5'</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -219,6 +221,7 @@ function App() {
                   placeholder="+07:00"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
+                <p className="mt-1 text-xs text-gray-500">Local timezone offset</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -236,6 +239,7 @@ function App() {
                   step="0.5"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
+                <p className="mt-1 text-xs text-gray-500">For grouping text into same line</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -253,12 +257,13 @@ function App() {
                   step="0.5"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
+                <p className="mt-1 text-xs text-gray-500">For merging wrapped text</p>
               </div>
             </div>
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Skip Row Patterns (one regex per line)
+                Skip Row Patterns
               </label>
               <textarea
                 value={config.skipRowPatterns.join('\n')}
@@ -268,6 +273,7 @@ function App() {
                 rows={5}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
               />
+              <p className="mt-1 text-xs text-gray-500">One regex per line</p>
             </div>
 
             <div className="flex gap-4">
