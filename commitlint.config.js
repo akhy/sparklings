@@ -15,6 +15,8 @@ export default {
         // Repository
         'root',
         'repo',
+        // Others
+        'deps',
       ],
     ],
     'scope-empty': [2, 'never'],
