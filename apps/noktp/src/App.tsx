@@ -1,93 +1,13 @@
-import { useState } from 'react'
-
-interface NIKParsed {
-  provinceCode: string
-  regencyCode: string
-  districtCode: string
-  birthDate: string
-  birthMonth: string
-  birthYear: string
-  gender: 'male' | 'female'
-  serialNumber: string
-  isValid: boolean
-  errors: string[]
-}
+import { useState, useEffect } from 'react'
+import { Attribution } from '@sparklings/ui'
+import { NIKParsed, parseNIK, formatNIK, formatBirthDate } from './nikParser'
+import { LocationData, getLocationData } from './locationService'
 
 function App() {
   const [nik, setNik] = useState('')
   const [parsed, setParsed] = useState<NIKParsed | null>(null)
-
-  const parseNIK = (input: string): NIKParsed => {
-    const errors: string[] = []
-    const cleanInput = input.replace(/\s/g, '')
-
-    // Validate length
-    if (cleanInput.length !== 16) {
-      errors.push('NIK must be exactly 16 digits')
-    }
-
-    // Validate all digits
-    if (!/^\d+$/.test(cleanInput)) {
-      errors.push('NIK must contain only numbers')
-    }
-
-    // Parse components
-    const provinceCode = cleanInput.substring(0, 2)
-    const regencyCode = cleanInput.substring(2, 4)
-    const districtCode = cleanInput.substring(4, 6)
-    let birthDate = cleanInput.substring(6, 8)
-    const birthMonth = cleanInput.substring(8, 10)
-    const birthYear = cleanInput.substring(10, 12)
-    const serialNumber = cleanInput.substring(12, 16)
-
-    // Determine gender and adjust birth date
-    let gender: 'male' | 'female' = 'male'
-    const birthDateNum = parseInt(birthDate)
-
-    if (birthDateNum > 40) {
-      gender = 'female'
-      birthDate = (birthDateNum - 40).toString().padStart(2, '0')
-    }
-
-    // Validate date components
-    const dateNum = parseInt(birthDate)
-    const monthNum = parseInt(birthMonth)
-    const yearNum = parseInt(birthYear)
-
-    if (dateNum < 1 || dateNum > 31) {
-      errors.push('Invalid birth date (day must be 1-31)')
-    }
-
-    if (monthNum < 1 || monthNum > 12) {
-      errors.push('Invalid birth month (month must be 1-12)')
-    }
-
-    // Full year (assume 1900s for >= 25, 2000s for < 25)
-    const fullYear = yearNum >= 25 ? 1900 + yearNum : 2000 + yearNum
-
-    // Validate date exists
-    const testDate = new Date(fullYear, monthNum - 1, dateNum)
-    if (
-      testDate.getDate() !== dateNum ||
-      testDate.getMonth() !== monthNum - 1 ||
-      testDate.getFullYear() !== fullYear
-    ) {
-      errors.push('Invalid date (date does not exist)')
-    }
-
-    return {
-      provinceCode,
-      regencyCode,
-      districtCode,
-      birthDate,
-      birthMonth,
-      birthYear,
-      gender,
-      serialNumber,
-      isValid: errors.length === 0,
-      errors,
-    }
-  }
+  const [location, setLocation] = useState<LocationData | null>(null)
+  const [loadingLocation, setLoadingLocation] = useState(false)
 
   const handleInputChange = (value: string) => {
     setNik(value)
@@ -95,19 +15,36 @@ function App() {
       setParsed(parseNIK(value))
     } else {
       setParsed(null)
+      setLocation(null)
     }
   }
 
-  const formatNIK = (value: string) => {
-    const clean = value.replace(/\s/g, '')
-    const parts = []
+  // Fetch location data when NIK is parsed
+  useEffect(() => {
+    if (!parsed || !parsed.isValid) {
+      setLocation(null)
+      return
+    }
 
-    if (clean.length > 0) parts.push(clean.substring(0, 6))
-    if (clean.length > 6) parts.push(clean.substring(6, 12))
-    if (clean.length > 12) parts.push(clean.substring(12, 16))
+    const fetchLocation = async () => {
+      setLoadingLocation(true)
+      try {
+        const locationData = await getLocationData(
+          parsed.provinceCode,
+          parsed.regencyCode,
+          parsed.districtCode
+        )
+        setLocation(locationData)
+      } catch (error) {
+        console.error('Failed to fetch location:', error)
+        setLocation(null)
+      } finally {
+        setLoadingLocation(false)
+      }
+    }
 
-    return parts.join(' ')
-  }
+    fetchLocation()
+  }, [parsed])
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
@@ -150,21 +87,38 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Location */}
                   <div className="border border-gray-200 rounded-lg p-4">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Location Code</h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Province:</span>
-                        <span className="font-mono font-semibold">{parsed.provinceCode}</span>
+                    <h3 className="text-sm font-semibold text-gray-500 mb-3">Location</h3>
+                    {loadingLocation ? (
+                      <div className="text-center py-4 text-gray-500">
+                        <div className="animate-pulse">Loading location data...</div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Regency/City:</span>
-                        <span className="font-mono font-semibold">{parsed.regencyCode}</span>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Province ({parsed.provinceCode})</div>
+                          <div className="font-semibold text-gray-800">
+                            {location?.provinceName || 'Unknown'}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">Regency/City ({parsed.regencyCode})</div>
+                          <div className="font-semibold text-gray-800">
+                            {location?.regencyName || 'Unknown'}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 mb-1">District ({parsed.districtCode})</div>
+                          <div className="font-semibold text-gray-800">
+                            {location?.districtName || 'Unknown'}
+                          </div>
+                        </div>
+                        {location?.error && (
+                          <div className="text-xs text-amber-600 mt-2">
+                            ⚠️ {location.error}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">District:</span>
-                        <span className="font-mono font-semibold">{parsed.districtCode}</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Birth Info */}
@@ -184,6 +138,13 @@ function App() {
                         <span className="font-mono font-semibold">
                           {parsed.birthYear} ({parseInt(parsed.birthYear) >= 25 ? '19' : '20'}{parsed.birthYear})
                         </span>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-800">
+                          {formatBirthDate(parsed)}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -266,33 +227,19 @@ function App() {
             <p>• Next 6 digits: Date of birth in DDMMYY format</p>
             <p>• For females, 40 is added to the birth date (e.g., 47 = 7th day, female)</p>
             <p>• Last 4 digits: Unique serial registration number</p>
+            <p>• Location names are fetched from <a href="https://ibnux.github.io/data-indonesia/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-900">Data Indonesia API</a></p>
           </div>
         </div>
 
         {/* Footer */}
         <footer className="mt-8 text-center text-xs text-gray-500 space-y-2">
           <p className="text-gray-400">
-            Disclaimer: This tool is for educational purposes only. No data is stored or transmitted.
+            Disclaimer: This tool is for educational purposes only. NIK parsing happens locally in your browser.
+            Only location codes (first 6 digits) are used to fetch location names from an external API.
+            Your full NIK is never transmitted or stored.
           </p>
           <p>
-            Part of{' '}
-            <a
-              href="https://github.com/chickenzord/sparklings"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              Sparklings
-            </a>
-            {' '}by{' '}
-            <a
-              href="https://github.com/akhy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              akhy
-            </a>
+            <Attribution appName="noktp" />
           </p>
         </footer>
       </div>

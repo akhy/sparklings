@@ -1,2 +1,2 @@
 // Shared UI components will be exported here
-export {};
+export { Attribution } from './Attribution';

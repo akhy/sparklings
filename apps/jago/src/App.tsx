@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
+import { Attribution } from '@sparklings/ui'
 import { Transaction, ParseConfig, DEFAULT_CONFIG, processPDF } from './pdfProcessor'
 
 // Configure PDF.js worker (use npm package worker for offline support)
@@ -496,27 +497,7 @@ function App() {
           </p>
 
           <p>
-            ✨
-            Part of{' '}
-            <a
-              href="https://github.com/chickenzord/sparklings"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              Sparklings
-            </a>
-            {' '}by{' '}
-            <a
-              href="https://github.com/akhy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              akhy
-            </a>
-            {' '}
-            (<a href="https://github.com/chickenzord/sparklings/tree/main/apps/jago" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">source code</a>)
+            <Attribution appName="jago" />
           </p>
         </footer>
       </div>
