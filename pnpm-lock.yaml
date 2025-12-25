@@ -132,6 +132,9 @@ importers:
 
   apps/jago:
     dependencies:
+      '@sparklings/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       parse-numeric-range:
         specifier: 'catalog:'
         version: 1.3.0
@@ -175,6 +178,9 @@ importers:
 
   apps/noktp:
     dependencies:
+      '@sparklings/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       react:
         specifier: 'catalog:'
         version: 18.3.1

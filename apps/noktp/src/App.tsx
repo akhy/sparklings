@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Attribution } from '@sparklings/ui'
 import { NIKParsed, parseNIK, formatNIK, formatBirthDate } from './nikParser'
 
 function App() {
@@ -187,24 +188,7 @@ function App() {
             Disclaimer: This tool is for educational purposes only. No data is stored or transmitted.
           </p>
           <p>
-            Part of{' '}
-            <a
-              href="https://github.com/chickenzord/sparklings"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              Sparklings
-            </a>
-            {' '}by{' '}
-            <a
-              href="https://github.com/akhy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              akhy
-            </a>
+            <Attribution appName="noktp" />
           </p>
         </footer>
       </div>
