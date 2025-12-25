@@ -33,6 +33,9 @@ jobs:
           node-version: "23"
           cache: "pnpm"
 
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Run ESLint
         run: pnpm lint
 
