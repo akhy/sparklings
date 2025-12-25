@@ -186,6 +186,25 @@ function App() {
                         </span>
                       </div>
                     </div>
+                    {(() => {
+                      const fullYear = parseInt(parsed.birthYear) >= 25 ? 1900 + parseInt(parsed.birthYear) : 2000 + parseInt(parsed.birthYear)
+                      const dateObj = new Date(fullYear, parseInt(parsed.birthMonth) - 1, parseInt(parsed.birthDate))
+                      const options: Intl.DateTimeFormatOptions = {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }
+                      return (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-gray-800">
+                              {dateObj.toLocaleDateString('en-US', options)}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
 
                   {/* Gender */}
