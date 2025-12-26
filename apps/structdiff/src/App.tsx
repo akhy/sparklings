@@ -90,6 +90,7 @@ function App() {
                 <div className="border border-base-300 rounded-lg overflow-hidden">
                   <CodeMirror
                     value={leftInput}
+                    minHeight="500px"
                     maxHeight="500px"
                     theme={isDark ? githubDark : githubLight}
                     extensions={[yaml()]}
@@ -113,6 +114,7 @@ function App() {
                 <div className="border border-base-300 rounded-lg overflow-hidden">
                   <CodeMirror
                     value={rightInput}
+                    minHeight="500px"
                     maxHeight="500px"
                     theme={isDark ? githubDark : githubLight}
                     extensions={[yaml()]}

@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
@@ -17,12 +19,14 @@
     "@uiw/codemirror-theme-github": "catalog:",
     "@uiw/react-codemirror": "catalog:",
     "codemirror": "catalog:",
+    "js-yaml": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "devDependencies": {
     "@sparklings/config": "workspace:*",
     "@tailwindcss/vite": "catalog:",
+    "@types/js-yaml": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
@@ -30,6 +34,7 @@
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
+    "vitest": "catalog:",
     "wrangler": "catalog:"
   }
 }
