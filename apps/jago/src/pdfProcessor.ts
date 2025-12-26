@@ -1,5 +1,17 @@
 import * as pdfjsLib from 'pdfjs-dist'
+import type { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api'
 import parseNumericRange from 'parse-numeric-range'
+
+// PDF.js text content types
+interface TextContent {
+  items: Array<TextItem | TextMarkedContent>
+  styles: Record<string, unknown>
+}
+
+// Type guard to check if item is TextItem (has transform property)
+function isTextItem(item: TextItem | TextMarkedContent): item is TextItem {
+  return 'transform' in item && 'str' in item
+}
 
 export interface Transaction {
   id: string
@@ -60,18 +72,19 @@ type RowWithPositions = CellWithPosition[]
 type LinesWithPositions = RowWithPositions[]
 
 // Processing pipeline functions
-const extractTextItems = (textContent: any) => {
+const extractTextItems = (textContent: TextContent): TextItem[] => {
   console.log('\n=== RAW TEXT ITEMS (with positions) ===')
-  textContent.items.forEach((item: any, index: number) => {
+  const textItems = textContent.items.filter(isTextItem)
+  textItems.forEach((item, index) => {
     console.log(`[${index}] x:${item.transform[4].toFixed(1)} y:${item.transform[5].toFixed(1)} "${item.str}"`)
   })
-  return textContent.items
+  return textItems
 }
 
-const createGroupIntoLines = (yTolerance: number) => (items: any[]): LinesWithPositions => {
+const createGroupIntoLines = (yTolerance: number) => (items: TextItem[]): LinesWithPositions => {
   // Sort items by Y-coordinate (top to bottom)
   const sortedItems = items
-    .map((item: any) => ({
+    .map((item) => ({
       x: item.transform[4],
       y: item.transform[5],
       str: item.str
