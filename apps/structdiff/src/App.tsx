@@ -4,6 +4,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { yaml } from '@codemirror/lang-yaml'
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github'
 import { getExample } from './examples'
+import { NormalizationConfig } from './normalizer'
 
 function App() {
   const [leftInput, setLeftInput] = useState('')
@@ -11,6 +12,15 @@ function App() {
   const [showModal, setShowModal] = useState(false)
   const [configOpen, setConfigOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
+
+  // Normalization config with sortKeys enabled by default
+  const [config, setConfig] = useState<NormalizationConfig>({
+    sortKeys: true,
+    ignoreWhitespace: false,
+    ignoreArrayOrder: false,
+    normalizeTypes: false,
+    trimStrings: false,
+  })
 
   // Detect theme changes
   useEffect(() => {
@@ -156,21 +166,60 @@ function App() {
             <div className="form-control">
               <label className="label cursor-pointer">
                 <span className="label-text">Sort Keys</span>
-                <input type="checkbox" className="checkbox" />
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  checked={config.sortKeys}
+                  onChange={(e) => setConfig({ ...config, sortKeys: e.target.checked })}
+                />
               </label>
             </div>
 
             <div className="form-control">
               <label className="label cursor-pointer">
                 <span className="label-text">Ignore Whitespace</span>
-                <input type="checkbox" className="checkbox" />
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  checked={config.ignoreWhitespace}
+                  onChange={(e) => setConfig({ ...config, ignoreWhitespace: e.target.checked })}
+                />
               </label>
             </div>
 
             <div className="form-control">
               <label className="label cursor-pointer">
                 <span className="label-text">Ignore Array Order</span>
-                <input type="checkbox" className="checkbox" />
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  checked={config.ignoreArrayOrder}
+                  onChange={(e) => setConfig({ ...config, ignoreArrayOrder: e.target.checked })}
+                />
+              </label>
+            </div>
+
+            <div className="form-control">
+              <label className="label cursor-pointer">
+                <span className="label-text">Normalize Types</span>
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  checked={config.normalizeTypes}
+                  onChange={(e) => setConfig({ ...config, normalizeTypes: e.target.checked })}
+                />
+              </label>
+            </div>
+
+            <div className="form-control">
+              <label className="label cursor-pointer">
+                <span className="label-text">Trim Strings</span>
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  checked={config.trimStrings}
+                  onChange={(e) => setConfig({ ...config, trimStrings: e.target.checked })}
+                />
               </label>
             </div>
 

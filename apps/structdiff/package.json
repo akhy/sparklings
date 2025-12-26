@@ -21,6 +21,7 @@
     "@uiw/react-codemirror": "catalog:",
     "codemirror": "catalog:",
     "js-yaml": "catalog:",
+    "jsondiffpatch": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

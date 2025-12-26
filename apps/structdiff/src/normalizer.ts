@@ -36,29 +36,6 @@ function parse(input: string, format: Format): unknown {
   }
 }
 
-/**
- * Serialize JavaScript object to string based on format
- */
-function serialize(data: unknown, format: Format, ignoreWhitespace: boolean): string {
-  switch (format) {
-    case 'json':
-      return ignoreWhitespace
-        ? JSON.stringify(data)
-        : JSON.stringify(data, null, 2)
-    case 'yaml':
-      return yaml.dump(data, {
-        indent: ignoreWhitespace ? 0 : 2,
-        lineWidth: -1,
-        noRefs: true,
-      })
-    case 'toml':
-      throw new Error('TOML format not yet supported')
-    case 'hcl':
-      throw new Error('HCL format not yet supported')
-    default:
-      throw new Error(`Unsupported format: ${format}`)
-  }
-}
 
 /**
  * Normalize a value based on configuration
@@ -126,31 +103,26 @@ function normalizeValue(value: unknown, config: NormalizationConfig): unknown {
 }
 
 /**
- * Normalize a structured data string
+ * Normalize a structured data string to a JavaScript object
  *
  * @param input - Input string to normalize
  * @param inputFormat - Format of the input string
- * @param outputFormat - Format for the output string
  * @param config - Normalization configuration
- * @returns Normalized string in the specified output format
+ * @returns Normalized JavaScript object
  */
 export function normalize(
   input: string,
   inputFormat: Format,
-  outputFormat: Format,
   config: Partial<NormalizationConfig> = {}
-): string {
+): unknown {
   const fullConfig: NormalizationConfig = { ...defaultConfig, ...config }
 
   try {
     // Parse input
     const parsed = parse(input, inputFormat)
 
-    // Normalize
-    const normalized = normalizeValue(parsed, fullConfig)
-
-    // Serialize to output format
-    return serialize(normalized, outputFormat, fullConfig.ignoreWhitespace)
+    // Normalize and return JS object
+    return normalizeValue(parsed, fullConfig)
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Normalization failed: ${error.message}`)
