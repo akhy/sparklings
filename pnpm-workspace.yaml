@@ -31,7 +31,7 @@ catalog:
   parse-numeric-range: ^1.3.0
   pdfjs-dist: ^5.4.449
   postcss: ^8.4.49
-  react: ^19.2.7
+  react: ^19.2.3
   react-dom: ^19.2.3
   tailwindcss: ^4.0.0
   turbo: ^2.7.2
