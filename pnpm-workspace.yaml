@@ -14,6 +14,7 @@ catalog:
   "@uiw/codemirror-theme-github": ^4.24.3
   "@uiw/react-codemirror": ^4.24.3
   "@vitejs/plugin-react": ^5.1.2
+  "@vitest/coverage-v8": ^4.0.16
   autoprefixer: ^10.4.20
   codemirror: ^6.0.1
   commitizen: ^4.3.1
