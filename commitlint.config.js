@@ -9,6 +9,7 @@ export default {
         'dencode',
         'jago',
         'noktp',
+        'structdiff',
         // Shared packages
         'ui',
         'utils',
