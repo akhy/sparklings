@@ -20,8 +20,8 @@
     "@uiw/codemirror-theme-github": "catalog:",
     "@uiw/react-codemirror": "catalog:",
     "codemirror": "catalog:",
+    "diff": "catalog:",
     "js-yaml": "catalog:",
-    "jsondiffpatch": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

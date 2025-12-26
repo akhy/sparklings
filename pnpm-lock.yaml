@@ -48,6 +48,9 @@ catalogs:
     daisyui:
       specifier: ^5.0.0
       version: 5.5.14
+    diff:
+      specifier: ^8.0.2
+      version: 8.0.2
     eslint:
       specifier: ^9.17.0
       version: 9.39.2
@@ -66,9 +69,6 @@ catalogs:
     js-yaml:
       specifier: ^4.1.0
       version: 4.1.1
-    jsondiffpatch:
-      specifier: ^0.6.0
-      version: 0.6.2
     parse-numeric-range:
       specifier: ^1.3.0
       version: 1.3.0
@@ -260,12 +260,12 @@ importers:
       codemirror:
         specifier: 'catalog:'
         version: 6.0.2
+      diff:
+        specifier: 'catalog:'
+        version: 8.0.2
       js-yaml:
         specifier: 'catalog:'
         version: 4.1.1
-      jsondiffpatch:
-        specifier: 'catalog:'
-        version: 0.6.2
       react:
         specifier: 'catalog:'
         version: 18.3.1
@@ -1563,9 +1563,6 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
-  '@types/diff-match-patch@1.0.36':
-    resolution: {integrity: sha512-xFdR6tkm0MWvBfO8xXCSsinYxHcqkQUlcHeSpMC2ukzOb6lwQAfDmW+Qt0AvlGd8HpsS28qKsB+oPeJn9I39jg==}
-
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
@@ -2024,8 +2021,9 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
-  diff-match-patch@1.0.5:
-    resolution: {integrity: sha512-IayShXAgj/QMXgB0IWmKx+rOPuGMhqm5w6jvFxmVenXKIzRqTAAsbBPT3kWQeGANj3jGgvcvv4yK6SxqYmikgw==}
+  diff@8.0.2:
+    resolution: {integrity: sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==}
+    engines: {node: '>=0.3.1'}
 
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
@@ -2539,11 +2537,6 @@ packages:
   json5@2.2.3:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
-    hasBin: true
-
-  jsondiffpatch@0.6.2:
-    resolution: {integrity: sha512-c4RkbPb6RXWjkhirwcKK87PuZCITdGRN1usrW4pXKEkwp7Gqf+0pSwQHoh/LtlYNHcxzoF6kok2/EFe6KL0qqQ==}
-    engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
   jsonparse@1.3.1:
@@ -4381,8 +4374,6 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
-  '@types/diff-match-patch@1.0.36': {}
-
   '@types/estree@1.0.8': {}
 
   '@types/js-yaml@4.0.9': {}
@@ -4947,7 +4938,7 @@ snapshots:
 
   detect-libc@2.1.2: {}
 
-  diff-match-patch@1.0.5: {}
+  diff@8.0.2: {}
 
   doctrine@2.1.0:
     dependencies:
@@ -5608,11 +5599,6 @@ snapshots:
   json-stable-stringify-without-jsonify@1.0.1: {}
 
   json5@2.2.3: {}
-
-  jsondiffpatch@0.6.2:
-    dependencies:
-      '@types/diff-match-patch': 1.0.36
-      diff-match-patch: 1.0.5
 
   jsonparse@1.3.1: {}
 

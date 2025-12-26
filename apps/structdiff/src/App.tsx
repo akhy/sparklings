@@ -4,7 +4,8 @@ import CodeMirror from '@uiw/react-codemirror'
 import { yaml } from '@codemirror/lang-yaml'
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github'
 import { getExample } from './examples'
-import { NormalizationConfig } from './normalizer'
+import { normalize, NormalizationConfig, Format } from './normalizer'
+import { diff } from './unidiff'
 
 function App() {
   const [leftInput, setLeftInput] = useState('')
@@ -12,6 +13,8 @@ function App() {
   const [showModal, setShowModal] = useState(false)
   const [configOpen, setConfigOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
+  const [diffResult, setDiffResult] = useState('')
+  const [error, setError] = useState('')
 
   // Normalization config with sortKeys enabled by default
   const [config, setConfig] = useState<NormalizationConfig>({
@@ -32,14 +35,80 @@ function App() {
     return () => mediaQuery.removeEventListener('change', handler)
   }, [])
 
+  const detectFormat = (input: string): Format => {
+    const trimmed = input.trim()
+    // Try to detect JSON (starts with { or [)
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      return 'json'
+    }
+    // Otherwise assume YAML
+    return 'yaml'
+  }
+
   const handleCompare = () => {
-    setShowModal(true)
+    try {
+      setError('')
+
+      // Detect format (use left input to determine)
+      const format = detectFormat(leftInput)
+
+      // Normalize both inputs
+      const leftNormalized = normalize(leftInput, format, config)
+      const rightNormalized = normalize(rightInput, format, config)
+
+      // Generate diff
+      const result = diff(leftNormalized, rightNormalized, { format: 'json' })
+
+      console.log({result})
+      setDiffResult(result)
+      setShowModal(true)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+      setError(errorMessage)
+      setDiffResult('')
+      setShowModal(true)
+    }
   }
 
   const handleLoadExample = () => {
     const example = getExample(0)
     setLeftInput(example.left)
     setRightInput(example.right)
+  }
+
+  const renderDiffLine = (line: string, index: number) => {
+    // Check the first character to determine line type
+    const firstChar = line.charAt(0)
+
+    if (firstChar === '+') {
+      // Added line - green background and text
+      return (
+        <div key={index} className="bg-success/20 text-success px-2 -mx-2">
+          {line}
+        </div>
+      )
+    } else if (firstChar === '-') {
+      // Removed line - red background and text
+      return (
+        <div key={index} className="bg-error/20 text-error px-2 -mx-2">
+          {line}
+        </div>
+      )
+    } else if (line.startsWith('@@')) {
+      // Chunk header - cyan/info color
+      return (
+        <div key={index} className="bg-info/20 text-info px-2 -mx-2 font-semibold">
+          {line}
+        </div>
+      )
+    } else {
+      // Context line - normal
+      return (
+        <div key={index} className="text-base-content/70 px-2 -mx-2">
+          {line}
+        </div>
+      )
+    }
   }
 
   return (
@@ -62,10 +131,10 @@ function App() {
             </div>
             <div className="flex gap-2">
               <button
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary"
                 onClick={handleLoadExample}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
                 Load Example
@@ -222,20 +291,6 @@ function App() {
                 />
               </label>
             </div>
-
-            <div className="divider"></div>
-
-            <div>
-              <label className="label">
-                <span className="label-text font-medium">Preset</span>
-              </label>
-              <select className="select select-bordered w-full">
-                <option>Default</option>
-                <option>Kubernetes ConfigMap</option>
-                <option>Package.json</option>
-                <option>API Response</option>
-              </select>
-            </div>
           </div>
         </div>
       </div>
@@ -255,9 +310,25 @@ function App() {
             </div>
 
             <div className="bg-base-200 rounded-lg p-4 h-[calc(100%-4rem)] overflow-auto">
-              <div className="mockup-code">
-                <pre><code>Diff results will be displayed here...</code></pre>
-              </div>
+              {error ? (
+                <div className="alert alert-error">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              ) : diffResult === '' ? (
+                <div className="alert alert-success">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>No differences found. The inputs are identical after normalization.</span>
+                </div>
+              ) : (
+                <pre className="font-mono text-sm whitespace-pre-wrap">
+                  {diffResult.split('\n').map(renderDiffLine)}
+                </pre>
+              )}
             </div>
           </div>
           <div className="modal-backdrop" onClick={() => setShowModal(false)}>
