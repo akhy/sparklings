@@ -38,5 +38,6 @@ catalog:
   typescript: ^5.7.2
   typescript-eslint: ^8.18.1
   vite: ^7.3.0
+  vite-plugin-pwa: ^0.21.2
   vitest: ^4.0.16
   wrangler: ^4.54.0
