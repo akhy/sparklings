@@ -1,4 +1,4 @@
-name: Publish @sparklings/reksadata to npm
+name: publish-@sparklings/reksadata
 
 on:
   workflow_dispatch:
@@ -12,18 +12,18 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          run_install: false # Prevents auto install so caching works better with setup-node
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "23"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
