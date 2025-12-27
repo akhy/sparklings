@@ -1,0 +1,59 @@
+{
+  "name": "@sparklings/reksadata",
+  "version": "0.1.0",
+  "description": "Indonesian mutual funds directory data",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./data": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/data/funds.json"
+    }
+  },
+  "files": [
+    "dist",
+    "raw/funds.csv",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsx scripts/build.ts && tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm clean && pnpm build",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "mutual-funds",
+    "reksa-dana",
+    "indonesia",
+    "finance",
+    "data"
+  ],
+  "author": "akhy",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chickenzord/sparklings.git",
+    "directory": "packages/reksadata"
+  },
+  "bugs": {
+    "url": "https://github.com/chickenzord/sparklings/issues"
+  },
+  "homepage": "https://github.com/chickenzord/sparklings/tree/main/packages/reksadata#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "sideEffects": false,
+  "devDependencies": {
+    "@sparklings/config": "workspace:*",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
