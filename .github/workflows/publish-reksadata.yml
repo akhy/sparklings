@@ -24,6 +24,7 @@ jobs:
         with:
           node-version: "23"
           cache: "pnpm"
+          registry-url: "https://registry.npmjs.org/"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -35,7 +36,7 @@ jobs:
         run: pnpm --filter=@sparklings/reksadata typecheck
 
       - name: Publish to npm
-        run: pnpm --filter=@sparklings/reksadata publish --no-git-checks --provenance --access public
+        run: pnpm --filter=@sparklings/reksadata publish
 
       - name: Get published version
         id: package-version
