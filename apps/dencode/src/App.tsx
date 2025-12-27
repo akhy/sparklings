@@ -1,53 +1,26 @@
 import { useState } from 'react'
-
-type EncodingMode = 'base64' | 'url' | 'hex'
+import { encode, decode, type EncodingMode } from './encoder'
 
 function App() {
   const [plain, setPlain] = useState('')
   const [encoded, setEncoded] = useState('')
   const [mode, setMode] = useState<EncodingMode>('base64')
 
-  const encode = () => {
-    try {
-      let result = ''
-      switch (mode) {
-        case 'base64':
-          result = btoa(plain)
-          break
-        case 'url':
-          result = encodeURIComponent(plain)
-          break
-        case 'hex':
-          result = Array.from(plain)
-            .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
-            .join('')
-          break
-      }
-      setEncoded(result)
-    } catch (error) {
-      setEncoded('Error: ' + (error as Error).message)
+  const handleEncode = () => {
+    const result = encode(plain, mode)
+    if (result.success) {
+      setEncoded(result.result)
+    } else {
+      setEncoded('Error: ' + result.error)
     }
   }
 
-  const decode = () => {
-    try {
-      let result = ''
-      switch (mode) {
-        case 'base64':
-          result = atob(encoded)
-          break
-        case 'url':
-          result = decodeURIComponent(encoded)
-          break
-        case 'hex':
-          result = encoded.match(/.{1,2}/g)
-            ?.map(byte => String.fromCharCode(parseInt(byte, 16)))
-            .join('') || ''
-          break
-      }
-      setPlain(result)
-    } catch (error) {
-      setPlain('Error: ' + (error as Error).message)
+  const handleDecode = () => {
+    const result = decode(encoded, mode)
+    if (result.success) {
+      setPlain(result.result)
+    } else {
+      setPlain('Error: ' + result.error)
     }
   }
 
@@ -85,7 +58,7 @@ function App() {
           <div className="flex items-center justify-center gap-4">
             {/* Encode Button */}
             <button
-              onClick={encode}
+              onClick={handleEncode}
               className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center gap-2 font-medium shadow-md"
             >
               <span>Encode</span>
@@ -109,7 +82,7 @@ function App() {
 
             {/* Decode Button */}
             <button
-              onClick={decode}
+              onClick={handleDecode}
               className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center gap-2 font-medium shadow-md"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
