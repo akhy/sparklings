@@ -10,14 +10,29 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png'],
+      includeAssets: [
+        'favicon.ico',
+        'favicon-16x16.png',
+        'favicon-32x32.png',
+        'apple-touch-icon.png',
+        'android-chrome-192x192.png',
+        'android-chrome-512x512.png',
+        'screenshot-01.png'
+      ],
       manifest: {
-        name: 'Jago Statement Parser',
-        short_name: 'Jago Parser',
-        description: 'Privacy-first Bank Jago statement parser - your data never leaves your device',
-        theme_color: '#3b82f6',
-        background_color: '#1a1a1a',
+        id: '/',
+        name: 'Jago PDF Parser',
+        short_name: 'Jago PDF Parser',
+        description: 'Bank Jago PDF e-statement parser',
+        lang: 'en',
+        dir: 'ltr',
+        start_url: '/?source=pwa',
+        scope: '/',
         display: 'standalone',
+        orientation: 'portrait-primary',
+        theme_color: '#ffb100',
+        background_color: '#1a1a1a',
+        categories: ['finance', 'productivity', 'utilities'],
         icons: [
           {
             src: 'android-chrome-192x192.png',
@@ -30,6 +45,14 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
+          }
+        ],
+        screenshots: [
+          {
+            src: 'screenshot-01.png',
+            sizes: '1080x1920',
+            type: 'image/png',
+            form_factor: 'narrow'
           }
         ]
       },
