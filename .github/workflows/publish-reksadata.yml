@@ -25,6 +25,7 @@ jobs:
           node-version: "24"
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
+          scope: "@sparklings"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
