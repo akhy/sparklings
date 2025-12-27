@@ -56,7 +56,7 @@ if (fund) {
 ```typescript
 import { filterByType } from '@sparklings/reksadata'
 
-const equityFunds = filterByType('Saham')
+const equityFunds = filterByType('equity_fund')
 console.log(`Found ${equityFunds.length} equity funds`)
 ```
 
@@ -105,19 +105,19 @@ interface Fund {
 
 ### Fund Types
 
-Common fund types in Indonesia:
+Fund types available in the dataset:
 
-- `Pasar Uang` - Money Market
-- `Pendapatan Tetap` - Fixed Income
-- `Saham` - Equity/Stock
-- `Campuran` - Balanced/Mixed
-- `Indeks` - Index
-- `Terproteksi` - Protected
-- `Syariah Pasar Uang` - Sharia Money Market
-- `Syariah Pendapatan Tetap` - Sharia Fixed Income
-- `Syariah Saham` - Sharia Equity
-- `Syariah Campuran` - Sharia Balanced
-- `ETF` - Exchange Traded Fund
+- `capital_protected_fund`
+- `mixed_asset_fund`
+- `fixed_income_fund`
+- `money_market_fund`
+- `equity_fund`
+- `index_fund`
+- `exchanged_traded_fund`
+- `sukuk_based_fund`
+- `global_fund`
+- `rd_-_terproteksi`
+- `rd_-_saham`
 
 ## API Reference
 
@@ -145,6 +145,10 @@ import type { Fund, FundsData, FundType } from '@sparklings/reksadata'
 ## Data Source
 
 Data is sourced from **OJK (Otoritas Jasa Keuangan)**, Indonesia's financial services authority.
+
+## Raw Data
+
+If you need the raw CSV data, it's available in the [GitHub repository](https://github.com/chickenzord/sparklings/blob/main/packages/reksadata/raw/funds.csv).
 
 ## Updates
 

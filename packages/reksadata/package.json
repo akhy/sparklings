@@ -1,6 +1,6 @@
 {
   "name": "@sparklings/reksadata",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Indonesian mutual funds directory data",
   "type": "module",
   "main": "./dist/index.js",
@@ -17,7 +17,6 @@
   },
   "files": [
     "dist",
-    "raw/funds.csv",
     "README.md"
   ],
   "scripts": {
