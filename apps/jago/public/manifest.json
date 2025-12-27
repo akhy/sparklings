@@ -1,5 +1,6 @@
 {
-  "name": "Jago Parser",
+  "name": "Jago PDF Parser",
+  "short_name": "Jago PDF Parser",
   "description": "Bank Jago PDF e-statement parser",
   "start_url": "/",
   "display": "standalone",
@@ -20,6 +21,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-01.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
     }
   ]
 }
