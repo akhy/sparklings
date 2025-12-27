@@ -1,0 +1,51 @@
+name: Publish @sparklings/reksadata to npm
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for npm provenance
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build reksadata package
+        run: pnpm --filter=@sparklings/reksadata build
+
+      - name: Run typecheck
+        run: pnpm --filter=@sparklings/reksadata typecheck
+
+      - name: Publish to npm
+        run: pnpm --filter=@sparklings/reksadata publish --no-git-checks --provenance --access public
+
+      - name: Get published version
+        id: package-version
+        run: |
+          VERSION=$(node -p "require('./packages/reksadata/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create summary
+        run: |
+          echo "## ✅ Published @sparklings/reksadata@${{ steps.package-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Package is now available at:" >> $GITHUB_STEP_SUMMARY
+          echo "https://www.npmjs.com/package/@sparklings/reksadata/v/${{ steps.package-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,11 @@
+# Build output
+dist/
+
+# Generated data (created at build time from CSV)
+src/data/
+
+# Node modules
+node_modules/
+
+# Logs
+*.log

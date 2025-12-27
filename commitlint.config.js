@@ -10,6 +10,8 @@ export default {
         'jago',
         'noktp',
         'structdiff',
+        // Libs
+        'reksadata',
         // Shared packages
         'ui',
         'utils',
