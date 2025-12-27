@@ -160,11 +160,12 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">
+        <h1 className="text-2xl font-bold text-center mb-4 text-gray-800 font-stretch-50%">
+          <img src="/android-chrome-192x192.png" alt="Jago Logo" className="inline-block w-10 h-10 mr-2 align-middle rounded-2xl" />
           Jago
         </h1>
         <p className="text-center text-gray-600 mb-8">
-          Bank Jago Statement Parser
+          Extract your Bank Jago transaction data from PDF statements into CSV format
         </p>
 
         {/* File Upload */}
