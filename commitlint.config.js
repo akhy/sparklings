@@ -16,6 +16,7 @@ export default {
         'ui',
         'utils',
         'config',
+        'i18n',
         // Repository
         'root',
         'repo',
