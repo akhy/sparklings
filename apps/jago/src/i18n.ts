@@ -116,6 +116,10 @@ export const translations = {
     id: 'Parsing Ulang',
     en: 'Re-parse'
   },
+  exportConfig: {
+    id: 'Ekspor Konfigurasi',
+    en: 'Export Config'
+  },
 
   // Statistics
   statisticsTitle: {

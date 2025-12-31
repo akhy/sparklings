@@ -4,6 +4,7 @@ import { Attribution } from '@sparklings/ui'
 import { useLanguage, LanguageSwitcher } from '@sparklings/i18n'
 import { Transaction, ParseConfig, DEFAULT_CONFIG, processPDF } from './pdfProcessor'
 import { translations } from './i18n'
+import { hashString } from './hash'
 
 // Configure PDF.js worker (use npm package worker for offline support)
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -91,6 +92,26 @@ function App() {
       setSortBy(column)
       setSortDirection('asc')
     }
+  }
+
+  const exportConfig = () => {
+    // Create JSON blob with current config
+    const configJSON = JSON.stringify(config, null, 2)
+    const blob = new Blob([configJSON], { type: 'application/json;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+
+    // Generate short hash from config JSON (for consistent naming)
+    const hash = hashString(JSON.stringify(config))
+    const filename = `jago-config-${hash}.json`
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', filename)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   const exportToCSV = () => {
@@ -373,6 +394,12 @@ function App() {
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
               >
                 {t('resetToDefault')}
+              </button>
+              <button
+                onClick={exportConfig}
+                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
+              >
+                {t('exportConfig')}
               </button>
               <button
                 onClick={() => file && loadPDF(file)}
