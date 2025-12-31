@@ -1,5 +1,3 @@
-export type Language = 'id' | 'en'
-
 export const translations = {
   title: {
     id: 'NoKTP',
@@ -159,5 +157,3 @@ export const translations = {
     en: 'District not found'
   }
 } as const
-
-export type TranslationKey = keyof typeof translations
