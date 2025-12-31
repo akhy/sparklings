@@ -50,7 +50,7 @@ export default defineConfig({
         screenshots: [
           {
             src: 'screenshot-01.png',
-            sizes: '1080x1920',
+            sizes: '750x1334',
             type: 'image/png',
             form_factor: 'narrow'
           }
