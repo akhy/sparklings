@@ -4,6 +4,8 @@ import { Attribution } from '@sparklings/ui'
 import { useLanguage, LanguageSwitcher } from '@sparklings/i18n'
 import { Transaction, ParseConfig, DEFAULT_CONFIG, processPDF } from './pdfProcessor'
 import { translations } from './i18n'
+import { hashString } from './hash'
+import { parseConfigFromJSON } from './configValidator'
 
 // Configure PDF.js worker (use npm package worker for offline support)
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -26,7 +28,12 @@ function App() {
   const [filterText, setFilterText] = useState('')
   const [totalPages, setTotalPages] = useState<number | null>(null)
   const [showPrivacyWarning, setShowPrivacyWarning] = useState(false)
+  const [showImportDialog, setShowImportDialog] = useState(false)
+  const [importText, setImportText] = useState('')
+  const [importError, setImportError] = useState<string | null>(null)
+  const [showConfigDropdown, setShowConfigDropdown] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const configFileInputRef = useRef<HTMLInputElement>(null)
 
   // Load config from localStorage
   useEffect(() => {
@@ -91,6 +98,71 @@ function App() {
       setSortBy(column)
       setSortDirection('asc')
     }
+  }
+
+  const exportConfig = () => {
+    // Create JSON blob with current config
+    const configJSON = JSON.stringify(config, null, 2)
+    const blob = new Blob([configJSON], { type: 'application/json;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+
+    // Generate short hash from config JSON (for consistent naming)
+    const hash = hashString(JSON.stringify(config))
+    const filename = `jago-config-${hash}.json`
+
+    link.setAttribute('href', url)
+    link.setAttribute('download', filename)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportFromFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0]
+    if (!selectedFile) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const content = event.target?.result as string
+      applyImportedConfig(content)
+    }
+    reader.readAsText(selectedFile)
+
+    // Reset input so the same file can be selected again
+    e.target.value = ''
+  }
+
+  const handleImportFromText = () => {
+    applyImportedConfig(importText)
+  }
+
+  const applyImportedConfig = (jsonString: string) => {
+    setImportError(null)
+
+    const parsedConfig = parseConfigFromJSON(jsonString)
+
+    if (!parsedConfig) {
+      // Check if it's invalid JSON or invalid schema
+      try {
+        JSON.parse(jsonString)
+        setImportError(t('invalidConfigSchema'))
+      } catch {
+        setImportError(t('invalidJson'))
+      }
+      return
+    }
+
+    // Apply the config
+    setConfig(parsedConfig)
+    setShowImportDialog(false)
+    setImportText('')
+    setImportError(null)
+
+    // Show success feedback (could use a toast notification here)
+    setError(null)
   }
 
   const exportToCSV = () => {
@@ -180,6 +252,78 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
+      {/* Import Config Dialog */}
+      {showImportDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 relative">
+            {/* Close Button (X) */}
+            <button
+              onClick={() => {
+                setShowImportDialog(false)
+                setImportText('')
+                setImportError(null)
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h2 className="text-xl font-bold mb-4 text-gray-800 pr-8">{t('importConfig')}</h2>
+
+            {/* File Import */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('importFromFile')}
+              </label>
+              <input
+                ref={configFileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImportFromFile}
+                className="hidden"
+              />
+              <button
+                onClick={() => configFileInputRef.current?.click()}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              >
+                {t('importFromFile')}
+              </button>
+            </div>
+
+            {/* Text Import */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('importFromText')}
+              </label>
+              <textarea
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder={t('pasteJsonHere')}
+                rows={10}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+              />
+              <button
+                onClick={handleImportFromText}
+                disabled={!importText.trim()}
+                className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {t('applyConfig')}
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {importError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                {importError}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Privacy Warning Modal */}
       {showPrivacyWarning && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -367,20 +511,67 @@ function App() {
               <p className="mt-1 text-xs text-gray-500">{t('skipRowPatternsHelp')}</p>
             </div>
 
-            <div className="flex gap-4">
-              <button
-                onClick={() => setConfig(DEFAULT_CONFIG)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
-              >
-                {t('resetToDefault')}
-              </button>
-              <button
-                onClick={() => file && loadPDF(file)}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                disabled={!file}
-              >
-                {t('reparseWithConfig')}
-              </button>
+            {/* Actions */}
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              {/* Primary Actions */}
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => file && loadPDF(file)}
+                  className="px-6 py-2.5 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!file}
+                >
+                  {t('reparseWithConfig')}
+                </button>
+                <button
+                  onClick={() => setConfig(DEFAULT_CONFIG)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+                >
+                  {t('resetToDefault')}
+                </button>
+              </div>
+
+              {/* Config Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowConfigDropdown(!showConfigDropdown)}
+                  className="px-4 py-2 text-sm bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition flex items-center gap-2"
+                >
+                  {t('configManagement')}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showConfigDropdown && (
+                  <>
+                    {/* Backdrop to close dropdown */}
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowConfigDropdown(false)}
+                    />
+                    {/* Dropdown menu */}
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
+                      <button
+                        onClick={() => {
+                          setShowImportDialog(true)
+                          setShowConfigDropdown(false)
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                      >
+                        {t('importConfig')}
+                      </button>
+                      <button
+                        onClick={() => {
+                          exportConfig()
+                          setShowConfigDropdown(false)
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+                      >
+                        {t('exportConfig')}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}

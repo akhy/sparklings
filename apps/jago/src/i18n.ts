@@ -116,6 +116,46 @@ export const translations = {
     id: 'Parsing Ulang',
     en: 'Re-parse'
   },
+  configManagement: {
+    id: 'Manajemen Konfigurasi',
+    en: 'Config Management'
+  },
+  exportConfig: {
+    id: 'Ekspor Konfigurasi',
+    en: 'Export Config'
+  },
+  importConfig: {
+    id: 'Impor Konfigurasi',
+    en: 'Import Config'
+  },
+  importFromFile: {
+    id: 'Dari File',
+    en: 'From File'
+  },
+  importFromText: {
+    id: 'Dari Teks',
+    en: 'From Text'
+  },
+  pasteJsonHere: {
+    id: 'Tempel JSON di sini...',
+    en: 'Paste JSON here...'
+  },
+  applyConfig: {
+    id: 'Terapkan',
+    en: 'Apply'
+  },
+  invalidJson: {
+    id: 'JSON tidak valid',
+    en: 'Invalid JSON'
+  },
+  invalidConfigSchema: {
+    id: 'Skema konfigurasi tidak valid',
+    en: 'Invalid config schema'
+  },
+  configImported: {
+    id: 'Konfigurasi berhasil diimpor',
+    en: 'Config imported successfully'
+  },
 
   // Statistics
   statisticsTitle: {
