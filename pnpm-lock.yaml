@@ -171,6 +171,9 @@ importers:
 
   apps/jago:
     dependencies:
+      '@sparklings/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@sparklings/ui':
         specifier: workspace:*
         version: link:../../packages/ui

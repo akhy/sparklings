@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import { Attribution } from '@sparklings/ui'
+import { useLanguage, LanguageSwitcher } from '@sparklings/i18n'
 import { Transaction, ParseConfig, DEFAULT_CONFIG, processPDF } from './pdfProcessor'
+import { translations } from './i18n'
 
 // Configure PDF.js worker (use npm package worker for offline support)
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -10,6 +12,9 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString()
 
 function App() {
+  const { language, setLanguage, t } = useLanguage(translations, {
+    storageKey: 'jago-language'
+  })
   const [file, setFile] = useState<File | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [config, setConfig] = useState<ParseConfig>(DEFAULT_CONFIG)
@@ -47,7 +52,7 @@ function App() {
       setTransactions(result.transactions)
       setTotalPages(result.totalPages)
     } catch (err) {
-      setError('Failed to load PDF: ' + (err as Error).message)
+      setError(t('errorFailedToLoad') + ' ' + (err as Error).message)
     } finally {
       setLoading(false)
     }
@@ -59,7 +64,7 @@ function App() {
       setFile(selectedFile)
       loadPDF(selectedFile)
     } else {
-      setError('Please select a valid PDF file')
+      setError(t('errorInvalidPdf'))
     }
   }
 
@@ -160,12 +165,15 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-7xl mx-auto">
+        <div className="flex justify-end mb-2">
+          <LanguageSwitcher language={language} onLanguageChange={setLanguage} />
+        </div>
         <h1 className="text-2xl font-bold text-center mb-4 text-gray-800 font-stretch-50%">
           <img src="/android-chrome-192x192.png" alt="Jago Logo" className="inline-block w-10 h-10 mr-2 align-middle rounded-2xl" />
-          Jago
+          {t('title')}
         </h1>
         <p className="text-center text-gray-600 mb-8">
-          Extract your Bank Jago transaction data from PDF statements into CSV format
+          {t('subtitle')}
         </p>
 
         {/* File Upload */}
@@ -182,12 +190,12 @@ function App() {
               onClick={() => fileInputRef.current?.click()}
               className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium shadow-md"
             >
-              Choose PDF File
+              {t('choosePdfFile')}
             </button>
             {file && (
               <span className="text-gray-700">
                 {file.name} ({Math.round(file.size / 1024)} KB
-                {totalPages !== null && `, ${totalPages} page${totalPages !== 1 ? 's' : ''}`})
+                {totalPages !== null && `, ${totalPages} ${totalPages !== 1 ? t('pages') : t('page')}`})
               </span>
             )}
           </div>
@@ -201,12 +209,12 @@ function App() {
               className="w-4 h-4"
             />
             <label htmlFor="showConfig" className="text-gray-700 cursor-pointer">
-              Show Configuration
+              {t('showConfiguration')}
             </label>
           </div>
 
           {loading && (
-            <div className="mt-4 text-blue-600">Loading PDF...</div>
+            <div className="mt-4 text-blue-600">{t('loadingPdf')}</div>
           )}
           {error && (
             <div className="mt-4 text-red-600">{error}</div>
@@ -216,12 +224,12 @@ function App() {
         {/* Configuration Panel */}
         {showConfig && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-4">
-            <h2 className="text-xl font-bold mb-4">Configuration</h2>
+            <h2 className="text-xl font-bold mb-4">{t('configurationTitle')}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Month Header Locale
+                  {t('monthHeaderLocale')}
                 </label>
                 <select
                   value={config.monthHeaderLocale || 'none'}
@@ -230,15 +238,15 @@ function App() {
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 >
-                  <option value="none">None (No filtering)</option>
-                  <option value="en">English</option>
-                  <option value="id">Indonesian</option>
+                  <option value="none">{t('monthHeaderLocaleNone')}</option>
+                  <option value="en">{t('monthHeaderLocaleEnglish')}</option>
+                  <option value="id">{t('monthHeaderLocaleIndonesian')}</option>
                 </select>
-                <p className="mt-1 text-xs text-gray-500">Filter out month section headers</p>
+                <p className="mt-1 text-xs text-gray-500">{t('monthHeaderLocaleHelp')}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Page Selector
+                  {t('pageSelector')}
                 </label>
                 <input
                   type="text"
@@ -246,14 +254,14 @@ function App() {
                   onChange={(e) =>
                     setConfig({ ...config, pageSelector: e.target.value })
                   }
-                  placeholder="all, 1-5, 1,3-5"
+                  placeholder={t('pageSelectorPlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
-                <p className="mt-1 text-xs text-gray-500">e.g., 'all', '1-5', '1,3-5'</p>
+                <p className="mt-1 text-xs text-gray-500">{t('pageSelectorHelp')}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Timezone
+                  {t('timezone')}
                 </label>
                 <input
                   type="text"
@@ -264,11 +272,11 @@ function App() {
                   placeholder="+07:00"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
-                <p className="mt-1 text-xs text-gray-500">Local timezone offset</p>
+                <p className="mt-1 text-xs text-gray-500">{t('timezoneHelp')}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Y Tolerance (px)
+                  {t('yTolerance')}
                 </label>
                 <input
                   type="number"
@@ -282,11 +290,11 @@ function App() {
                   step="0.5"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
-                <p className="mt-1 text-xs text-gray-500">For grouping text into same line</p>
+                <p className="mt-1 text-xs text-gray-500">{t('yToleranceHelp')}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  X Tolerance (px)
+                  {t('xTolerance')}
                 </label>
                 <input
                   type="number"
@@ -300,13 +308,13 @@ function App() {
                   step="0.5"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
                 />
-                <p className="mt-1 text-xs text-gray-500">For merging wrapped text</p>
+                <p className="mt-1 text-xs text-gray-500">{t('xToleranceHelp')}</p>
               </div>
             </div>
 
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Skip Row Patterns
+                {t('skipRowPatterns')}
               </label>
               <textarea
                 value={config.skipRowPatterns.join('\n')}
@@ -316,7 +324,7 @@ function App() {
                 rows={5}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
               />
-              <p className="mt-1 text-xs text-gray-500">One regex per line</p>
+              <p className="mt-1 text-xs text-gray-500">{t('skipRowPatternsHelp')}</p>
             </div>
 
             <div className="flex gap-4">
@@ -324,14 +332,14 @@ function App() {
                 onClick={() => setConfig(DEFAULT_CONFIG)}
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
               >
-                Reset to Default
+                {t('resetToDefault')}
               </button>
               <button
                 onClick={() => file && loadPDF(file)}
                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
                 disabled={!file}
               >
-                Re-parse with Current Config
+                {t('reparseWithConfig')}
               </button>
             </div>
           </div>
@@ -340,20 +348,20 @@ function App() {
         {/* Statistics */}
         {transactions.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-4">
-            <h2 className="text-xl font-bold mb-4">Statistics</h2>
+            <h2 className="text-xl font-bold mb-4">{t('statisticsTitle')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <div className="text-gray-600 text-sm">Total Transactions</div>
+                <div className="text-gray-600 text-sm">{t('totalTransactions')}</div>
                 <div className="text-2xl font-bold">{transactions.length}</div>
               </div>
               <div>
-                <div className="text-gray-600 text-sm">Total Debits</div>
+                <div className="text-gray-600 text-sm">{t('totalDebits')}</div>
                 <div className="text-2xl font-bold text-red-600">
                   -Rp {totalDebits.toLocaleString('id-ID')}
                 </div>
               </div>
               <div>
-                <div className="text-gray-600 text-sm">Total Credits</div>
+                <div className="text-gray-600 text-sm">{t('totalCredits')}</div>
                 <div className="text-2xl font-bold text-green-600">
                   +Rp {totalCredits.toLocaleString('id-ID')}
                 </div>
@@ -368,20 +376,20 @@ function App() {
             <div className="mb-4 flex items-center gap-4">
               <input
                 type="text"
-                placeholder="Search transactions..."
+                placeholder={t('searchPlaceholder')}
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-md"
               />
               <span className="text-gray-600 text-sm whitespace-nowrap">
-                Showing {filteredTransactions.length} of {transactions.length}
+                {t('showingCount')} {filteredTransactions.length} {t('of')} {transactions.length}
               </span>
               <button
                 onClick={exportToCSV}
                 disabled={filteredTransactions.length === 0}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed whitespace-nowrap"
               >
-                Export CSV
+                {t('exportCsv')}
               </button>
             </div>
 
@@ -393,37 +401,37 @@ function App() {
                       onClick={() => handleSort('timestamp')}
                       className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                     >
-                      Timestamp {sortBy === 'timestamp' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      {t('tableHeaderTimestamp')} {sortBy === 'timestamp' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     <th
                       onClick={() => handleSort('description')}
                       className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                     >
-                      Description {sortBy === 'description' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      {t('tableHeaderDescription')} {sortBy === 'description' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     <th
                       onClick={() => handleSort('note')}
                       className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                     >
-                      Note {sortBy === 'note' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      {t('tableHeaderNote')} {sortBy === 'note' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     <th
                       onClick={() => handleSort('type')}
                       className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                     >
-                      Type {sortBy === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      {t('tableHeaderType')} {sortBy === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     <th
                       onClick={() => handleSort('amount')}
                       className="px-4 py-3 text-right font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                     >
-                      Amount {sortBy === 'amount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      {t('tableHeaderAmount')} {sortBy === 'amount' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                     <th
                       onClick={() => handleSort('balance')}
                       className="px-4 py-3 text-right font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                     >
-                      Balance {sortBy === 'balance' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      {t('tableHeaderBalance')} {sortBy === 'balance' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </th>
                   </tr>
                 </thead>
@@ -489,12 +497,11 @@ function App() {
         {/* Footer */}
         <footer className="mt-8 text-center text-xs text-gray-500 space-y-2">
           <p className="text-gray-400">
-            Disclaimer: This tool is not affiliated with PT Bank Jago Tbk in any way.
-            The author holds no responsibility for any issues arising from the use of this tool.
+            {t('disclaimer')}
           </p>
 
           <p>
-            Works completely offline - your data never leaves your device
+            {t('offlineMessage')}
           </p>
 
           <p>
