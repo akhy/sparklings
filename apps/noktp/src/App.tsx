@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Attribution } from '@sparklings/ui'
+import { useLanguage, LanguageSwitcher } from '@sparklings/i18n'
 import { NIKParsed, parseNIK, formatNIK, formatBirthDate } from './nikParser'
 import { LocationData, getLocationData } from './locationService'
-import { useLanguage } from './useLanguage'
-import { LanguageSwitcher } from './LanguageSwitcher'
+import { translations } from './i18n'
 
 function App() {
-  const { language, setLanguage, t } = useLanguage()
+  const { language, setLanguage, t } = useLanguage(translations, {
+    storageKey: 'noktp-language'
+  })
   const [nik, setNik] = useState('')
   const [parsed, setParsed] = useState<NIKParsed | null>(null)
   const [location, setLocation] = useState<LocationData | null>(null)

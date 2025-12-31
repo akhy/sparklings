@@ -12,6 +12,7 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@sparklings/i18n": "workspace:*",
     "@sparklings/ui": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"

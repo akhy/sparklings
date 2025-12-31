@@ -12,6 +12,7 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@sparklings/i18n": "workspace:*",
     "@sparklings/ui": "workspace:*",
     "parse-numeric-range": "catalog:",
     "pdfjs-dist": "catalog:",
