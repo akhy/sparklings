@@ -25,6 +25,7 @@ function App() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [filterText, setFilterText] = useState('')
   const [totalPages, setTotalPages] = useState<number | null>(null)
+  const [showPrivacyWarning, setShowPrivacyWarning] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Load config from localStorage
@@ -43,6 +44,21 @@ function App() {
   useEffect(() => {
     localStorage.setItem('jago-parse-config', JSON.stringify(config))
   }, [config])
+
+  // Check if privacy warning should be shown
+  useEffect(() => {
+    const dismissed = localStorage.getItem('jago-privacy-warning-dismissed')
+    if (!dismissed) {
+      setShowPrivacyWarning(true)
+    }
+  }, [])
+
+  const handleDismissPrivacyWarning = (dontShowAgain: boolean) => {
+    setShowPrivacyWarning(false)
+    if (dontShowAgain) {
+      localStorage.setItem('jago-privacy-warning-dismissed', 'true')
+    }
+  }
 
   const loadPDF = async (file: File) => {
     setLoading(true)
@@ -164,6 +180,30 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
+      {/* Privacy Warning Modal */}
+      {showPrivacyWarning && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">{t('privacyWarningTitle')}</h2>
+            <p className="text-gray-700 mb-6">{t('privacyWarningFirstLaunch')}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleDismissPrivacyWarning(false)}
+                className="flex-1 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+              >
+                {t('privacyWarningDismiss')}
+              </button>
+              <button
+                onClick={() => handleDismissPrivacyWarning(true)}
+                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              >
+                {t('privacyWarningDontShowAgain')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-end mb-2">
           <LanguageSwitcher language={language} onLanguageChange={setLanguage} />
@@ -373,6 +413,11 @@ function App() {
         {/* Transactions Table */}
         {transactions.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-6">
+            {/* Persistent Privacy Warning */}
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+              {t('privacyWarningPersistent')}
+            </div>
+
             <div className="mb-4 flex items-center gap-4">
               <input
                 type="text"

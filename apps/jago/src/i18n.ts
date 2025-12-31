@@ -177,6 +177,28 @@ export const translations = {
     en: 'Balance'
   },
 
+  // Privacy Warnings
+  privacyWarningTitle: {
+    id: 'Peringatan Privasi',
+    en: 'Privacy Warning'
+  },
+  privacyWarningFirstLaunch: {
+    id: '⚠️ Data Anda bersifat pribadi - jangan bagikan screenshot hasil parsing tanpa menyembunyikan informasi sensitif',
+    en: '⚠️ Your data is private - don\'t share parsing result screenshots without hiding sensitive information'
+  },
+  privacyWarningPersistent: {
+    id: '💡 Hati-hati saat membagikan screenshot - data transaksi bersifat pribadi',
+    en: '💡 Be careful when sharing screenshots - transaction data is private'
+  },
+  privacyWarningDismiss: {
+    id: 'Mengerti',
+    en: 'Got it'
+  },
+  privacyWarningDontShowAgain: {
+    id: 'Jangan tampilkan lagi',
+    en: 'Don\'t show again'
+  },
+
   // Footer
   disclaimer: {
     id: 'Disclaimer: Alat ini tidak berafiliasi dengan PT Bank Jago Tbk dengan cara apa pun. Pembuat tidak bertanggung jawab atas masalah apa pun yang timbul dari penggunaan alat ini.',
