@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    alias: {
+      'pdfjs-dist': new URL('./vitest.mocks.ts', import.meta.url).pathname,
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -11,7 +14,6 @@ export default defineConfig({
         'src/**/*.spec.ts',
         'src/main.tsx',
         'src/vite-env.d.ts',
-        'src/pdfProcessor.ts', // Complex PDF processing - will test separately
       ],
       thresholds: {
         lines: 80,

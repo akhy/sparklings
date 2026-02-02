@@ -17,6 +17,7 @@ export default {
         'utils',
         'config',
         'i18n',
+        'jago-parser',
         // Repository
         'root',
         'repo',

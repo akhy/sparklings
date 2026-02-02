@@ -1,4 +1,4 @@
-import type { ParseConfig } from './config'
+import type { ParseConfig } from '@sparklings/jago-parser'
 
 /**
  * Validates if an object matches the ParseConfig schema

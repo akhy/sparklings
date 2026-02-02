@@ -16,8 +16,8 @@
   },
   "dependencies": {
     "@sparklings/i18n": "workspace:*",
+    "@sparklings/jago-parser": "workspace:*",
     "@sparklings/ui": "workspace:*",
-    "parse-numeric-range": "catalog:",
     "pdfjs-dist": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
