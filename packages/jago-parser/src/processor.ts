@@ -2,7 +2,7 @@ import * as pdfjsLib from 'pdfjs-dist'
 import type { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api'
 import parseNumericRange from 'parse-numeric-range'
 import type { ParseConfig } from './config'
-import { DEFAULT_CONFIG } from './config'
+import type { Transaction, ProcessResult } from './types'
 
 // PDF.js text content types
 interface TextContent {
@@ -14,21 +14,6 @@ interface TextContent {
 function isTextItem(item: TextItem | TextMarkedContent): item is TextItem {
   return 'transform' in item && 'str' in item
 }
-
-export interface Transaction {
-  id: string
-  timestamp: string // ISO 8601 with timezone (e.g., "2024-12-24T14:30:00+07:00")
-  description: string
-  note: string // extra note, sometimes from the user who make the transaction
-  amount: number
-  balance: number
-  type: 'debit' | 'credit'
-  index: number // Original index in the page for stable sorting
-  rawData: string[][]
-}
-
-export type { ParseConfig }
-export { DEFAULT_CONFIG }
 
 // Debug/Development toggles
 const REMOVE_EMPTY_CELLS = false
@@ -413,16 +398,18 @@ const parsePageSelector = (selector: string, totalPages: number): number[] => {
   return validPages
 }
 
-export interface ProcessResult {
-  transactions: Transaction[]
-  totalPages: number
-}
-
+/**
+ * Process a Bank Jago PDF statement and extract transactions
+ *
+ * @param file - The PDF file to process (as File or ArrayBuffer)
+ * @param config - Configuration for parsing
+ * @returns Promise resolving to ProcessResult with transactions and metadata
+ */
 export const processPDF = async (
-  file: File,
+  file: File | ArrayBuffer,
   config: ParseConfig
 ): Promise<ProcessResult> => {
-  const arrayBuffer = await file.arrayBuffer()
+  const arrayBuffer = file instanceof File ? await file.arrayBuffer() : file
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
 
   console.log('=== PDF INFO ===')

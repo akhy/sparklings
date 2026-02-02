@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { isValidParseConfig, parseConfigFromJSON } from './configValidator'
-import { DEFAULT_CONFIG } from './config'
+import { DEFAULT_CONFIG } from '@sparklings/jago-parser'
 
 describe('isValidParseConfig', () => {
   it('should validate a correct config', () => {

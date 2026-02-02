@@ -1,0 +1,20 @@
+{
+  "name": "@sparklings/jago-parser",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "parse-numeric-range": "catalog:",
+    "pdfjs-dist": "catalog:"
+  },
+  "devDependencies": {
+    "@sparklings/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
