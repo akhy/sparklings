@@ -31,4 +31,4 @@ pnpm deploy
 
 ## License
 
-Part of the [Sparklings](https://github.com/chickenzord/sparklings) monorepo.
+Part of the [Sparklings](https://github.com/akhy/sparklings) monorepo.

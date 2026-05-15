@@ -148,7 +148,7 @@ Data is sourced from **OJK (Otoritas Jasa Keuangan)**, Indonesia's financial ser
 
 ## Raw Data
 
-If you need the raw CSV data, it's available in the [GitHub repository](https://github.com/chickenzord/sparklings/blob/main/packages/reksadata/raw/funds.csv).
+If you need the raw CSV data, it's available in the [GitHub repository](https://github.com/akhy/sparklings/blob/main/packages/reksadata/raw/funds.csv).
 
 ## Updates
 

@@ -36,13 +36,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/chickenzord/sparklings.git",
+    "url": "https://github.com/akhy/sparklings.git",
     "directory": "packages/reksadata"
   },
   "bugs": {
-    "url": "https://github.com/chickenzord/sparklings/issues"
+    "url": "https://github.com/akhy/sparklings/issues"
   },
-  "homepage": "https://github.com/chickenzord/sparklings/tree/main/packages/reksadata#readme",
+  "homepage": "https://github.com/akhy/sparklings/tree/main/packages/reksadata#readme",
   "engines": {
     "node": ">=18.0.0"
   },

@@ -1,6 +1,6 @@
 # ✨ sparklings ✨
 
-[![codecov](https://codecov.io/github/chickenzord/sparklings/graph/badge.svg?token=YPuoG09jxQ)](https://codecov.io/github/chickenzord/sparklings)
+[![codecov](https://codecov.io/github/akhy/sparklings/graph/badge.svg?token=YPuoG09jxQ)](https://codecov.io/github/akhy/sparklings)
 [![@sparklings/reksadata NPM version](https://img.shields.io/npm/v/%40sparklings%2Freksadata?label=%40sparklings%2Freksadata)](https://www.npmjs.com/package/@sparklings/reksadata)
 
 Just some random mini apps for the fun.
