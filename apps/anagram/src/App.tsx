@@ -138,11 +138,6 @@ function App() {
     }
   }
 
-  const handleClear = () => {
-    setLeftText('')
-    setRightText('')
-  }
-
   const handleSwap = () => {
     const temp = leftText
     setLeftText(rightText)
@@ -240,22 +235,14 @@ function App() {
         </header>
 
         {/* Toolbar */}
-        <div className="flex justify-center gap-3 mb-8">
+        <div className="flex justify-center mb-8">
           <button
             onClick={handleSwap}
             disabled={!leftText && !rightText}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-850 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-white rounded-xl text-sm font-bold shadow-md hover:bg-slate-850 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
           >
             <ArrowLeftRight className="w-4 h-4 text-indigo-400" />
             <span>Swap Phrases</span>
-          </button>
-          <button
-            onClick={handleClear}
-            disabled={!leftText && !rightText}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-red-950/40 hover:border-red-900/60 text-red-405 rounded-xl text-sm font-medium hover:bg-red-950/20 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-          >
-            <Trash2 className="w-4 h-4 text-red-400" />
-            <span>Clear All</span>
           </button>
         </div>
 
@@ -270,9 +257,20 @@ function App() {
               <label htmlFor="leftInput" className="text-sm font-bold tracking-wide uppercase text-red-400">
                 {isMobile ? 'Top Phrase' : 'Left Phrase'}
               </label>
-              <span className="text-xs font-semibold text-slate-500">
-                {getCleanLength(leftText)} chars
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-slate-505">
+                  {getCleanLength(leftText)} chars
+                </span>
+                {leftText && (
+                  <button
+                    onClick={() => setLeftText('')}
+                    className="p-1 text-slate-500 hover:text-red-400 hover:bg-slate-800/50 rounded transition cursor-pointer active:scale-95"
+                    title="Clear phrase"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
             
             <textarea
@@ -361,9 +359,20 @@ function App() {
               <label htmlFor="rightInput" className="text-sm font-bold tracking-wide uppercase text-blue-400">
                 {isMobile ? 'Bottom Phrase' : 'Right Phrase'}
               </label>
-              <span className="text-xs font-semibold text-slate-500">
-                {getCleanLength(rightText)} chars
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-slate-505">
+                  {getCleanLength(rightText)} chars
+                </span>
+                {rightText && (
+                  <button
+                    onClick={() => setRightText('')}
+                    className="p-1 text-slate-500 hover:text-red-400 hover:bg-slate-800/50 rounded transition cursor-pointer active:scale-95"
+                    title="Clear phrase"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
             
             {/* Step 1 Tour Wrapper */}
@@ -533,7 +542,7 @@ function App() {
             }`}></div>
             <div>
               <h3 className={`font-extrabold text-lg sm:text-xl flex items-center gap-2 ${
-                isSameOrder ? 'text-amber-400' : 'text-emerald-450'
+                isSameOrder ? 'text-amber-400' : 'text-emerald-455'
               }`}>
                 {isSameOrder ? '🤨 COPYING HOMEWORK?' : '✨ PERFECT ANAGRAM MATCH! ✨'}
               </h3>
