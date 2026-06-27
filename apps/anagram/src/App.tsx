@@ -21,6 +21,10 @@ function App() {
   const [savedPairs, setSavedPairs] = useState<AnagramPair[]>([])
   const [isSaved, setIsSaved] = useState(false)
   const [showList, setShowList] = useState(false)
+  
+  // Suggestion visibility and Tour State
+  const [isSuggestionVisible, setIsSuggestionVisible] = useState(true)
+  const [tourStep, setTourStep] = useState<number | null>(null)
 
   // Load saved pairs & handle seeding
   useEffect(() => {
@@ -72,15 +76,45 @@ function App() {
     selectRandomSuggestion()
   }, [])
 
+  // Scroll target element of the active tour step into view
+  useEffect(() => {
+    if (tourStep === null) return
+
+    let elementId = ''
+    if (tourStep === 1) {
+      elementId = 'rightInput'
+    } else if (tourStep === 2) {
+      elementId = 'rightMissing'
+    } else if (tourStep === 3) {
+      elementId = 'leftMissing'
+    } else if (tourStep === 4) {
+      const btn = document.getElementById('shuffleRightBtn')
+      elementId = btn ? 'shuffleRightBtn' : 'rightInput'
+    }
+
+    if (elementId) {
+      const element = document.getElementById(elementId)
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        })
+      }
+    }
+  }, [tourStep])
+
   const selectRandomSuggestion = () => {
     const randomIndex = Math.floor(Math.random() * DEFAULT_FAMOUS_ANAGRAMS.length)
     setSuggestion(DEFAULT_FAMOUS_ANAGRAMS[randomIndex])
+    setIsSuggestionVisible(true)
   }
 
   const handleLoadSuggestion = () => {
     if (!suggestion) return
     setLeftText(suggestion.left)
     setRightText('')
+    setIsSuggestionVisible(false)
+    setTourStep(1)
   }
 
   const handleShuffle = (side: 'left' | 'right') => {
@@ -143,6 +177,10 @@ function App() {
     URL.revokeObjectURL(url)
   }
 
+  const cleanLeft = leftText.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const cleanRight = rightText.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const isSameOrder = isMatched && cleanLeft === cleanRight
+
   const getCleanLength = (str: string) => {
     return str.replace(/[^a-zA-Z0-9]/g, '').length
   }
@@ -169,22 +207,21 @@ function App() {
 
           {/* Interactive Suggestion */}
           {suggestion && (
-            <div className="mt-6 inline-flex items-center gap-2 bg-slate-900/40 border border-slate-800/80 px-4 py-2 rounded-full text-xs sm:text-sm text-slate-400 shadow-md">
-              💡 Not sure how it works? Try{' '}
-              <button
-                onClick={handleLoadSuggestion}
-                className="text-indigo-400 hover:text-indigo-300 font-bold underline decoration-indigo-400/40 active:scale-95 transition cursor-pointer"
-              >
-                "{suggestion.left}"
-              </button>{' '}
-              and figure out its anagram.
-              <button
-                onClick={selectRandomSuggestion}
-                className="text-slate-500 hover:text-slate-300 ml-1 active:scale-95 transition font-semibold"
-                title="Show another example"
-              >
-                🎲 Next
-              </button>
+            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
+              isSuggestionVisible
+                ? 'max-h-16 opacity-100 mt-4'
+                : 'max-h-0 opacity-0 mt-0 pointer-events-none'
+            }`}>
+              <p className="text-slate-400 text-xs sm:text-sm">
+                💡 Not sure how it works? Try{' '}
+                <button
+                  onClick={handleLoadSuggestion}
+                  className="text-indigo-400 hover:text-indigo-300 font-extrabold underline decoration-indigo-400/45 cursor-pointer active:scale-95 transition"
+                >
+                  "{suggestion.left}"
+                </button>{' '}
+                and figure out its anagram.
+              </p>
             </div>
           )}
         </header>
@@ -211,8 +248,8 @@ function App() {
         <main className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           
           {/* LEFT PANEL */}
-          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 relative overflow-hidden transition hover:border-slate-700/60 shadow-xl">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-red-500 to-pink-500"></div>
+          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 relative transition hover:border-slate-700/60 shadow-xl">
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-red-500 to-pink-500 rounded-t-2xl"></div>
             
             <div className="flex justify-between items-center mb-3">
               <label htmlFor="leftInput" className="text-sm font-bold tracking-wide uppercase text-red-400">
@@ -246,26 +283,63 @@ function App() {
                 )}
               </div>
 
-              <div className="bg-slate-950/60 border border-slate-800/50 rounded-xl p-4 min-h-[72px] flex items-center justify-center flex-wrap gap-2">
-                {leftMissing.length > 0 ? (
-                  leftMissing.map((char, index) => (
-                    <span
-                      key={`${char}-${index}`}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-950/30 border border-red-500/20 text-red-400 font-mono font-bold text-lg select-all"
-                    >
-                      {char}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-sm text-slate-600 italic">No missing letters</span>
+              {/* Step 3 Tour Wrapper (Left Missing Pool) */}
+              <div className="relative">
+                <div id="leftMissing" className="bg-slate-950/60 border border-slate-800/50 rounded-xl p-4 min-h-[72px] flex items-center justify-center flex-wrap gap-2">
+                  {leftMissing.length > 0 ? (
+                    leftMissing.map((char, index) => (
+                      <span
+                        key={`${char}-${index}`}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-950/30 border border-red-500/20 text-red-400 font-mono font-bold text-lg select-all"
+                      >
+                        {char}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-slate-600 italic">No missing letters</span>
+                  )}
+                </div>
+
+                {/* Tour Step 3 Tooltip */}
+                {tourStep === 3 && (
+                  <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 w-72 bg-slate-900 border border-indigo-500/40 p-4 rounded-xl shadow-xl shadow-slate-950/80 animate-fade-in-up">
+                    <div className="text-left space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-widest">Step 3 of 4</span>
+                        <span className="flex h-2 w-2 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-white">🎯 Left Character Pool</h4>
+                      <p className="text-xs text-slate-350 leading-relaxed">
+                        This shows the letters missing from the left side to match what is typed on the right. If you type extra letters on the right, they will appear here!
+                      </p>
+                      <div className="flex justify-between items-center pt-2">
+                        <button
+                          onClick={() => setTourStep(2)}
+                          className="text-xs text-slate-500 hover:text-slate-300 font-medium cursor-pointer"
+                        >
+                          ⮨ Back
+                        </button>
+                        <button
+                          onClick={() => setTourStep(4)}
+                          className="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-slate-955 text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer"
+                        >
+                          Next ➔
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-3 h-3 bg-slate-900 border-r border-b border-indigo-500/40 rotate-45 absolute top-full -mt-1.5 left-1/2 -translate-x-1/2"></div>
+                  </div>
                 )}
               </div>
             </div>
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 relative overflow-hidden transition hover:border-slate-700/60 shadow-xl">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+          <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 relative transition hover:border-slate-700/60 shadow-xl">
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-t-2xl"></div>
             
             <div className="flex justify-between items-center mb-3">
               <label htmlFor="rightInput" className="text-sm font-bold tracking-wide uppercase text-blue-400">
@@ -276,41 +350,154 @@ function App() {
               </span>
             </div>
             
-            <textarea
-              id="rightInput"
-              value={rightText}
-              onChange={(e) => setRightText(e.target.value)}
-              placeholder="Type second word/phrase here..."
-              className="w-full h-36 bg-slate-950 border border-slate-800 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white rounded-xl p-4 text-lg font-medium resize-none outline-none placeholder-slate-600 transition"
-            />
+            {/* Step 1 Tour Wrapper */}
+            <div className="relative">
+              <textarea
+                id="rightInput"
+                value={rightText}
+                onChange={(e) => setRightText(e.target.value)}
+                placeholder="Type second word/phrase here..."
+                className="w-full h-36 bg-slate-950 border border-slate-800 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 text-white rounded-xl p-4 text-lg font-medium resize-none outline-none placeholder-slate-600 transition"
+              />
+              
+              {/* Tour Step 1 Tooltip */}
+              {tourStep === 1 && (
+                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 w-72 bg-slate-900 border border-indigo-500/40 p-4 rounded-xl shadow-xl shadow-slate-950/80">
+                  <div className="text-left space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-widest">Step 1 of 4</span>
+                      <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-bold text-white">✍️ Right Phrase Field</h4>
+                    <p className="text-xs text-slate-350 leading-relaxed">
+                      Type your anagram in this field. Your goal is to write a phrase that uses the exact same characters as the left phrase.
+                    </p>
+                    <div className="flex justify-between items-center pt-2">
+                      <button
+                        onClick={() => setTourStep(null)}
+                        className="text-xs text-slate-500 hover:text-slate-300 font-medium cursor-pointer"
+                      >
+                        Skip
+                      </button>
+                      <button
+                        onClick={() => setTourStep(2)}
+                        className="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-slate-955 text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer"
+                      >
+                        Next ➔
+                      </button>
+                    </div>
+                  </div>
+                  <div className="w-3 h-3 bg-slate-900 border-r border-b border-indigo-500/40 rotate-45 absolute top-full -mt-1.5 left-1/2 -translate-x-1/2"></div>
+                </div>
+              )}
+            </div>
             
             <div className="mt-6 space-y-3">
-              <div className="flex justify-between items-center min-h-[28px]">
+              <div className="flex justify-between items-center min-h-[28px] relative">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   Missing from Right <span className="text-slate-600">(to match Left)</span>:
                 </span>
-                {rightMissing.length > 0 && (
-                  <button
-                    onClick={() => handleShuffle('right')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-medium transition active:scale-95 cursor-pointer"
-                  >
-                    🎲 Shuffle
-                  </button>
-                )}
+                
+                {/* Step 4 Tour Wrapper around Shuffle Button */}
+                <div className="relative">
+                  {rightMissing.length > 0 && (
+                    <button
+                      id="shuffleRightBtn"
+                      onClick={() => handleShuffle('right')}
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-medium transition active:scale-95 cursor-pointer"
+                    >
+                      🎲 Shuffle
+                    </button>
+                  )}
+                  
+                  {/* Tour Step 4 Tooltip */}
+                  {tourStep === 4 && (
+                    <div className="absolute bottom-full mb-3 right-0 z-50 w-72 bg-slate-900 border border-indigo-500/40 p-4 rounded-xl shadow-xl shadow-slate-950/80 animate-fade-in-up">
+                      <div className="text-left space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-widest">Step 4 of 4</span>
+                          <span className="flex h-2 w-2 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-white">🎲 Stuck? Try Shuffle</h4>
+                        <p className="text-xs text-slate-350 leading-relaxed">
+                          If you are having trouble forming a phrase, try clicking Shuffle. Scrambling the remaining letters can help your brain recognize hidden words or combinations.
+                        </p>
+                        <div className="flex justify-between items-center pt-2">
+                          <button
+                            onClick={() => setTourStep(3)}
+                            className="text-xs text-slate-500 hover:text-slate-300 font-medium cursor-pointer"
+                          >
+                            ⮨ Back
+                          </button>
+                          <button
+                            onClick={() => setTourStep(null)}
+                            className="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-slate-955 text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer"
+                          >
+                            Got it! ✓
+                          </button>
+                        </div>
+                      </div>
+                      <div className="w-3 h-3 bg-slate-900 border-r border-b border-indigo-500/40 rotate-45 absolute top-full -mt-1.5 right-6"></div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="bg-slate-950/60 border border-slate-800/50 rounded-xl p-4 min-h-[72px] flex items-center justify-center flex-wrap gap-2">
-                {rightMissing.length > 0 ? (
-                  rightMissing.map((char, index) => (
-                    <span
-                      key={`${char}-${index}`}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-950/30 border border-blue-500/20 text-blue-455 font-mono font-bold text-lg select-all"
-                    >
-                      {char}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-sm text-slate-600 italic">No missing letters</span>
+              {/* Step 2 Tour Wrapper */}
+              <div className="relative">
+                <div id="rightMissing" className="bg-slate-950/60 border border-slate-800/50 rounded-xl p-4 min-h-[72px] flex items-center justify-center flex-wrap gap-2">
+                  {rightMissing.length > 0 ? (
+                    rightMissing.map((char, index) => (
+                      <span
+                        key={`${char}-${index}`}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-950/30 border border-blue-500/20 text-blue-455 font-mono font-bold text-lg select-all"
+                      >
+                        {char}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-slate-600 italic">No missing letters</span>
+                  )}
+                </div>
+                
+                {/* Tour Step 2 Tooltip */}
+                {tourStep === 2 && (
+                  <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 w-72 bg-slate-900 border border-indigo-500/40 p-4 rounded-xl shadow-xl shadow-slate-950/80 animate-fade-in-up">
+                    <div className="text-left space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-widest">Step 2 of 4</span>
+                        <span className="flex h-2 w-2 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-white">🎯 Missing Character Pool</h4>
+                      <p className="text-xs text-slate-350 leading-relaxed">
+                        This shows the letters that are missing from the right side to match the left. Your objective is to type these letters until this list is completely empty!
+                      </p>
+                      <div className="flex justify-between items-center pt-2">
+                        <button
+                          onClick={() => setTourStep(1)}
+                          className="text-xs text-slate-500 hover:text-slate-300 font-medium cursor-pointer"
+                        >
+                          ⮨ Back
+                        </button>
+                        <button
+                          onClick={() => setTourStep(3)}
+                          className="px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-slate-955 text-xs font-bold rounded-lg transition active:scale-95 cursor-pointer"
+                        >
+                          Next ➔
+                        </button>
+                      </div>
+                    </div>
+                    <div className="w-3 h-3 bg-slate-900 border-r border-b border-indigo-500/40 rotate-45 absolute top-full -mt-1.5 left-1/2 -translate-x-1/2"></div>
+                  </div>
                 )}
               </div>
             </div>
@@ -319,20 +506,35 @@ function App() {
 
         {/* Status & Save Area */}
         {isMatched && (
-          <div className="relative mb-10 overflow-hidden rounded-2xl bg-slate-900/40 border border-emerald-500/30 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-emerald-950/20">
-            <div className="absolute inset-0 bg-emerald-500/[0.02] pointer-events-none"></div>
+          <div className={`relative mb-10 overflow-hidden rounded-2xl bg-slate-900/40 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg transition-all duration-300 ${
+            isSameOrder 
+              ? 'border border-amber-500/30 shadow-amber-950/10' 
+              : 'border border-emerald-500/30 shadow-emerald-950/20'
+          }`}>
+            <div className={`absolute inset-0 pointer-events-none ${
+              isSameOrder ? 'bg-amber-500/[0.01]' : 'bg-emerald-500/[0.02]'
+            }`}></div>
             <div>
-              <h3 className="text-emerald-400 font-extrabold text-lg sm:text-xl flex items-center gap-2">
-                ✨ PERFECT ANAGRAM MATCH! ✨
+              <h3 className={`font-extrabold text-lg sm:text-xl flex items-center gap-2 ${
+                isSameOrder ? 'text-amber-400' : 'text-emerald-450'
+              }`}>
+                {isSameOrder ? '🤨 COPYING HOMEWORK?' : '✨ PERFECT ANAGRAM MATCH! ✨'}
               </h3>
               <p className="text-slate-400 text-xs sm:text-sm mt-1">
-                Both phrases contain the exact same characters.
+                {isSameOrder 
+                  ? "They have the exact same letter order. Technically it counts, but try rearranging them for the real magic! 🙃" 
+                  : "Both phrases contain the exact same characters."
+                }
               </p>
             </div>
             {!isSaved && (
               <button
                 onClick={handleSavePair}
-                className="px-5 py-2.5 rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-slate-950"
+                className={`px-5 py-2.5 rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95 ${
+                  isSameOrder 
+                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950' 
+                    : 'bg-emerald-500 hover:bg-emerald-600 text-slate-950'
+                }`}
               >
                 💾 Save Pair
               </button>
@@ -344,7 +546,7 @@ function App() {
         <div className="flex justify-center mb-8">
           <button
             onClick={() => setShowList(!showList)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95"
+            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95"
           >
             <span>{showList ? '🙈 Hide Collection' : `📚 View Collection (${savedPairs.length})`}</span>
           </button>
@@ -360,7 +562,7 @@ function App() {
               {savedPairs.length > 0 && (
                 <button
                   onClick={handleExportText}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-450 hover:text-white rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer"
                 >
                   📥 Export (.txt)
                 </button>
@@ -387,7 +589,7 @@ function App() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={(e) => handleDeletePair(pair, e)}
-                          className="p-1.5 text-slate-600 hover:text-red-400 rounded-lg hover:bg-slate-900 transition cursor-pointer"
+                          className="p-1.5 text-slate-650 hover:text-red-400 rounded-lg hover:bg-slate-900 transition cursor-pointer"
                           title="Delete from collection"
                         >
                           🗑️
