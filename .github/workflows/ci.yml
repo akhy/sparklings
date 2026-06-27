@@ -22,25 +22,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          run_install: false # Prevents auto install so caching works better with setup-node
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          cache: "pnpm"
+          bun-version: latest
 
       - name: Install dependencies
-        run: pnpm install
+        run: bun install --frozen-lockfile
 
       - name: Run ESLint
-        run: pnpm lint
+        run: bun run lint
 
       - name: Run TypeScript type check
-        run: pnpm typecheck
+        run: bun run typecheck
 
   test-coverage:
     runs-on: ubuntu-latest
@@ -48,22 +42,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          run_install: false
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "23"
-          cache: "pnpm"
+          bun-version: latest
 
       - name: Install dependencies
-        run: pnpm install
+        run: bun install --frozen-lockfile
 
       - name: Run tests with coverage
-        run: pnpm test:coverage
+        run: bun run test:coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
