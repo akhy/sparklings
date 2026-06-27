@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getLetterCounts, calculateBalance, shuffleArray, getContractedKey } from './anagram'
+import { getLetterCounts, calculateBalance, shuffleArray, getContractedKey, getPairKey } from './anagram'
 
 describe('anagram helpers', () => {
   describe('getLetterCounts', () => {
@@ -81,6 +81,21 @@ describe('anagram helpers', () => {
       expect(getContractedKey('I am Lord Voldemort')).toBe('ADEILLMMOORRTVY')
       expect(getContractedKey('Astronomer')).toBe('AEMNOORRST')
       expect(getContractedKey('Moon starer')).toBe('AEMNOORRST')
+    })
+  })
+
+  describe('getPairKey', () => {
+    it('should return identical keys for swapped left-right pairs', () => {
+      const keyA = getPairKey('Tom Marvolo Riddle', 'I am Lord Voldemort')
+      const keyB = getPairKey('I am Lord Voldemort', 'Tom Marvolo Riddle')
+      expect(keyA).toBe(keyB)
+      expect(keyA).toBe('IAMLORDVOLDEMORT::TOMMARVOLORIDDLE')
+    })
+
+    it('should return different keys for different anagrams of same phrase', () => {
+      const keyA = getPairKey('Tom Marvolo Riddle', 'I am Lord Voldemort')
+      const keyB = getPairKey('Tom Marvolo Riddle', 'Immortal old void')
+      expect(keyA).not.toBe(keyB)
     })
   })
 })

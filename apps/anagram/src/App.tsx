@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Attribution } from '@sparklings/ui'
 import { ArrowLeftRight, Trash2, Shuffle, Save, Library, Download } from 'lucide-react'
-import { calculateBalance, shuffleArray, getContractedKey } from './anagram'
+import { calculateBalance, shuffleArray, getPairKey } from './anagram'
 
 interface AnagramPair {
   left: string
@@ -43,7 +43,7 @@ function App() {
           // Deduplicate to make sure no duplicate keys exist
           const seen = new Set<string>()
           const deduplicated = parsed.filter(p => {
-            const key = getContractedKey(p.left)
+            const key = getPairKey(p.left, p.right)
             if (seen.has(key)) return false
             seen.add(key)
             return true
@@ -64,8 +64,8 @@ function App() {
     setIsMatched(result.isMatched)
 
     if (result.isMatched) {
-      const currentKey = getContractedKey(leftText)
-      const alreadySaved = savedPairs.some(p => getContractedKey(p.left) === currentKey)
+      const currentKey = getPairKey(leftText, rightText)
+      const alreadySaved = savedPairs.some(p => getPairKey(p.left, p.right) === currentKey)
       setIsSaved(alreadySaved)
     } else {
       setIsSaved(false)
@@ -139,11 +139,11 @@ function App() {
 
   const handleSavePair = () => {
     if (!isMatched) return
-    const currentKey = getContractedKey(leftText)
+    const currentKey = getPairKey(leftText, rightText)
     const newPair: AnagramPair = { left: leftText, right: rightText }
 
     // Deduplicate: filter out any existing saved pair with same key
-    const filtered = savedPairs.filter(p => getContractedKey(p.left) !== currentKey)
+    const filtered = savedPairs.filter(p => getPairKey(p.left, p.right) !== currentKey)
     const updated = [newPair, ...filtered]
     
     setSavedPairs(updated)
@@ -153,8 +153,8 @@ function App() {
 
   const handleDeletePair = (pair: AnagramPair, e: React.MouseEvent) => {
     e.stopPropagation() // Avoid loading the deleted pair
-    const keyToDelete = getContractedKey(pair.left)
-    const updated = savedPairs.filter(p => getContractedKey(p.left) !== keyToDelete)
+    const keyToDelete = getPairKey(pair.left, pair.right)
+    const updated = savedPairs.filter(p => getPairKey(p.left, p.right) !== keyToDelete)
     setSavedPairs(updated)
     localStorage.setItem('anagram-saved-pairs', JSON.stringify(updated))
   }
@@ -240,7 +240,7 @@ function App() {
           <button
             onClick={handleClear}
             disabled={!leftText && !rightText}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-red-950/40 hover:border-red-900/60 text-red-450 rounded-xl text-sm font-medium hover:bg-red-950/20 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-red-950/40 hover:border-red-900/60 text-red-405 rounded-xl text-sm font-medium hover:bg-red-950/20 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
           >
             <Trash2 className="w-4 h-4 text-red-400" />
             <span>Clear All</span>
@@ -552,7 +552,7 @@ function App() {
         <div className="flex justify-center mb-8">
           <button
             onClick={() => setShowList(!showList)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95"
+            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95"
           >
             <Library className="w-4 h-4 text-indigo-400" />
             <span>{showList ? 'Hide Collection' : `View Collection (${savedPairs.length})`}</span>
@@ -580,7 +580,7 @@ function App() {
             {savedPairs.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {savedPairs.map((pair) => {
-                  const uniqueKey = getContractedKey(pair.left)
+                  const uniqueKey = getPairKey(pair.left, pair.right)
                   return (
                     <div
                       key={uniqueKey}

@@ -82,3 +82,13 @@ export function shuffleArray<T>(array: T[]): T[] {
 export function getContractedKey(str: string): string {
   return str.toUpperCase().replace(/[^A-Z0-9]/g, '').split('').sort().join('')
 }
+
+/**
+ * Returns a unique signature for a pair of strings.
+ * Normalizes both strings and sorts them so left-right swap yields the same key.
+ */
+export function getPairKey(left: string, right: string): string {
+  const cleanL = left.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  const cleanR = right.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  return [cleanL, cleanR].sort().join('::')
+}
