@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Attribution } from '@sparklings/ui'
+import { ArrowLeftRight, Trash2, Shuffle, Save, Library, Download } from 'lucide-react'
 import { calculateBalance, shuffleArray, getContractedKey } from './anagram'
 
 interface AnagramPair {
@@ -233,14 +234,16 @@ function App() {
             disabled={!leftText && !rightText}
             className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-850 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
           >
-            <span>🔄 Swap Phrases</span>
+            <ArrowLeftRight className="w-4 h-4 text-indigo-400" />
+            <span>Swap Phrases</span>
           </button>
           <button
             onClick={handleClear}
             disabled={!leftText && !rightText}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-red-950/40 hover:border-red-900/60 text-red-400 rounded-xl text-sm font-medium hover:bg-red-950/20 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-red-950/40 hover:border-red-900/60 text-red-450 rounded-xl text-sm font-medium hover:bg-red-950/20 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
           >
-            <span>🗑️ Clear All</span>
+            <Trash2 className="w-4 h-4 text-red-400" />
+            <span>Clear All</span>
           </button>
         </div>
 
@@ -278,7 +281,8 @@ function App() {
                     onClick={() => handleShuffle('left')}
                     className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-medium transition active:scale-95 cursor-pointer"
                   >
-                    🎲 Shuffle
+                    <Shuffle className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Shuffle</span>
                   </button>
                 )}
               </div>
@@ -409,7 +413,8 @@ function App() {
                       onClick={() => handleShuffle('right')}
                       className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-medium transition active:scale-95 cursor-pointer"
                     >
-                      🎲 Shuffle
+                      <Shuffle className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Shuffle</span>
                     </button>
                   )}
                   
@@ -530,13 +535,14 @@ function App() {
             {!isSaved && (
               <button
                 onClick={handleSavePair}
-                className={`px-5 py-2.5 rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95 ${
+                className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95 ${
                   isSameOrder 
                     ? 'bg-amber-500 hover:bg-amber-600 text-slate-950' 
                     : 'bg-emerald-500 hover:bg-emerald-600 text-slate-950'
                 }`}
               >
-                💾 Save Pair
+                <Save className="w-4 h-4" />
+                <span>Save Pair</span>
               </button>
             )}
           </div>
@@ -546,9 +552,10 @@ function App() {
         <div className="flex justify-center mb-8">
           <button
             onClick={() => setShowList(!showList)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95"
+            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95"
           >
-            <span>{showList ? '🙈 Hide Collection' : `📚 View Collection (${savedPairs.length})`}</span>
+            <Library className="w-4 h-4 text-indigo-400" />
+            <span>{showList ? 'Hide Collection' : `View Collection (${savedPairs.length})`}</span>
           </button>
         </div>
 
@@ -557,14 +564,16 @@ function App() {
           <section className="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 shadow-xl animate-fade-in">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold uppercase tracking-wider text-slate-350 flex items-center gap-2">
-                📚 Anagram Collection
+                <Library className="w-5 h-5 text-indigo-400" />
+                <span>Anagram Collection</span>
               </h2>
               {savedPairs.length > 0 && (
                 <button
                   onClick={handleExportText}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-450 hover:text-white rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer"
                 >
-                  📥 Export (.txt)
+                  <Download className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Export (.txt)</span>
                 </button>
               )}
             </div>
@@ -592,7 +601,7 @@ function App() {
                           className="p-1.5 text-slate-650 hover:text-red-400 rounded-lg hover:bg-slate-900 transition cursor-pointer"
                           title="Delete from collection"
                         >
-                          🗑️
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
