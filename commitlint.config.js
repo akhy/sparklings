@@ -6,6 +6,7 @@ export default {
       'always',
       [
         // Apps
+        'anagram',
         'dencode',
         'jago',
         'noktp',

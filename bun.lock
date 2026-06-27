@@ -11,6 +11,29 @@
         "turbo": "^2.10.0",
       },
     },
+    "apps/anagram": {
+      "name": "@sparklings/anagram",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sparklings/ui": "workspace:*",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+      },
+      "devDependencies": {
+        "@sparklings/config": "workspace:*",
+        "@tailwindcss/vite": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "@vitejs/plugin-react": "catalog:",
+        "@vitest/coverage-v8": "catalog:",
+        "eslint": "catalog:",
+        "tailwindcss": "catalog:",
+        "typescript": "catalog:",
+        "vite": "catalog:",
+        "vitest": "catalog:",
+        "wrangler": "catalog:",
+      },
+    },
     "apps/dencode": {
       "name": "@sparklings/dencode",
       "version": "0.0.0",
@@ -744,6 +767,8 @@
     "@simple-libs/stream-utils": ["@simple-libs/stream-utils@1.2.0", "", {}, "sha512-KxXvfapcixpz6rVEB6HPjOUZT22yN6v0vI0urQSk1L8MlEWPDFCZkhw2xmkyoTGYeFw7tWTZd7e3lVzRZRN/EA=="],
 
     "@sindresorhus/is": ["@sindresorhus/is@7.2.0", "", {}, "sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw=="],
+
+    "@sparklings/anagram": ["@sparklings/anagram@workspace:apps/anagram"],
 
     "@sparklings/config": ["@sparklings/config@workspace:packages/config"],
 
