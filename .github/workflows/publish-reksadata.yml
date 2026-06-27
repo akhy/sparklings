@@ -14,30 +14,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false # Prevents auto install so caching works better with setup-node
-
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: "24"
-          cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
           scope: "@sparklings"
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Build reksadata package
-        run: pnpm --filter=@sparklings/reksadata build
+        run: bunx turbo run build --filter=@sparklings/reksadata
 
       - name: Run typecheck
-        run: pnpm --filter=@sparklings/reksadata typecheck
+        run: bunx turbo run typecheck --filter=@sparklings/reksadata
 
       - name: Publish to npm
-        run: pnpm --filter=@sparklings/reksadata publish
+        run: cd packages/reksadata && npm publish --provenance
 
       - name: Get published version
         id: package-version

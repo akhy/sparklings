@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@sparklings/config": "workspace:*",
+    "eslint": "catalog:",
     "typescript": "catalog:"
   }
 }
