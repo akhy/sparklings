@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getLetterCounts, calculateBalance, shuffleArray } from './anagram'
+import { getLetterCounts, calculateBalance, shuffleArray, getContractedKey } from './anagram'
 
 describe('anagram helpers', () => {
   describe('getLetterCounts', () => {
@@ -72,6 +72,15 @@ describe('anagram helpers', () => {
       const shuffled = shuffleArray(original)
       expect(shuffled.length).toBe(original.length)
       expect(shuffled.sort()).toEqual(original.sort())
+    })
+  })
+
+  describe('getContractedKey', () => {
+    it('should return sorted uppercase alphanumeric characters', () => {
+      expect(getContractedKey('Tom Marvolo Riddle')).toBe('ADEILLMMOORRTVY')
+      expect(getContractedKey('I am Lord Voldemort')).toBe('ADEILLMMOORRTVY')
+      expect(getContractedKey('Astronomer')).toBe('AEMNOORRST')
+      expect(getContractedKey('Moon starer')).toBe('AEMNOORRST')
     })
   })
 })

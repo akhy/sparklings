@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Attribution } from '@sparklings/ui'
-import { calculateBalance, shuffleArray } from './anagram'
+import { calculateBalance, shuffleArray, getContractedKey } from './anagram'
+
+interface AnagramPair {
+  left: string
+  right: string
+}
+
+const DEFAULT_FAMOUS_ANAGRAMS: AnagramPair[] = [
+  { left: 'Tom Marvolo Riddle', right: 'I am Lord Voldemort' }
+]
 
 function App() {
   const [leftText, setLeftText] = useState('')
@@ -8,14 +17,71 @@ function App() {
   const [leftMissing, setLeftMissing] = useState<string[]>([])
   const [rightMissing, setRightMissing] = useState<string[]>([])
   const [isMatched, setIsMatched] = useState(false)
+  const [suggestion, setSuggestion] = useState<AnagramPair | null>(null)
+  const [savedPairs, setSavedPairs] = useState<AnagramPair[]>([])
+  const [isSaved, setIsSaved] = useState(false)
+  const [showList, setShowList] = useState(false)
 
-  // Recalculate missing letters when inputs change
+  // Load saved pairs & handle seeding
+  useEffect(() => {
+    try {
+      const seeded = localStorage.getItem('anagram-seeded')
+      if (!seeded) {
+        // Seed initial famous anagrams
+        localStorage.setItem('anagram-saved-pairs', JSON.stringify(DEFAULT_FAMOUS_ANAGRAMS))
+        localStorage.setItem('anagram-seeded', 'true')
+        setSavedPairs(DEFAULT_FAMOUS_ANAGRAMS)
+      } else {
+        const stored = localStorage.getItem('anagram-saved-pairs')
+        if (stored) {
+          const parsed: AnagramPair[] = JSON.parse(stored)
+          // Deduplicate to make sure no duplicate keys exist
+          const seen = new Set<string>()
+          const deduplicated = parsed.filter(p => {
+            const key = getContractedKey(p.left)
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+          })
+          setSavedPairs(deduplicated)
+        }
+      }
+    } catch (e) {
+      console.error('Failed to handle database seeding:', e)
+    }
+  }, [])
+
+  // Recalculate missing letters and match status when inputs change
   useEffect(() => {
     const result = calculateBalance(leftText, rightText)
     setLeftMissing(result.leftMissing)
     setRightMissing(result.rightMissing)
     setIsMatched(result.isMatched)
-  }, [leftText, rightText])
+
+    if (result.isMatched) {
+      const currentKey = getContractedKey(leftText)
+      const alreadySaved = savedPairs.some(p => getContractedKey(p.left) === currentKey)
+      setIsSaved(alreadySaved)
+    } else {
+      setIsSaved(false)
+    }
+  }, [leftText, rightText, savedPairs])
+
+  // Select initial random suggestion
+  useEffect(() => {
+    selectRandomSuggestion()
+  }, [])
+
+  const selectRandomSuggestion = () => {
+    const randomIndex = Math.floor(Math.random() * DEFAULT_FAMOUS_ANAGRAMS.length)
+    setSuggestion(DEFAULT_FAMOUS_ANAGRAMS[randomIndex])
+  }
+
+  const handleLoadSuggestion = () => {
+    if (!suggestion) return
+    setLeftText(suggestion.left)
+    setRightText('')
+  }
 
   const handleShuffle = (side: 'left' | 'right') => {
     if (side === 'left') {
@@ -34,6 +100,47 @@ function App() {
     const temp = leftText
     setLeftText(rightText)
     setRightText(temp)
+  }
+
+  const handleSavePair = () => {
+    if (!isMatched) return
+    const currentKey = getContractedKey(leftText)
+    const newPair: AnagramPair = { left: leftText, right: rightText }
+
+    // Deduplicate: filter out any existing saved pair with same key
+    const filtered = savedPairs.filter(p => getContractedKey(p.left) !== currentKey)
+    const updated = [newPair, ...filtered]
+    
+    setSavedPairs(updated)
+    localStorage.setItem('anagram-saved-pairs', JSON.stringify(updated))
+    setIsSaved(true)
+  }
+
+  const handleDeletePair = (pair: AnagramPair, e: React.MouseEvent) => {
+    e.stopPropagation() // Avoid loading the deleted pair
+    const keyToDelete = getContractedKey(pair.left)
+    const updated = savedPairs.filter(p => getContractedKey(p.left) !== keyToDelete)
+    setSavedPairs(updated)
+    localStorage.setItem('anagram-saved-pairs', JSON.stringify(updated))
+  }
+
+  const handleLoadPair = (pair: AnagramPair) => {
+    setLeftText(pair.left)
+    setRightText(pair.right)
+  }
+
+  const handleExportText = () => {
+    if (savedPairs.length === 0) return
+    const content = savedPairs.map(p => `${p.left} == ${p.right}`).join('\n')
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'anagram-collection.txt'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   const getCleanLength = (str: string) => {
@@ -59,6 +166,27 @@ function App() {
           <p className="text-slate-400 max-w-lg mx-auto text-sm sm:text-base">
             Type two words or phrases to balance their letters. The engine live-calculates missing letters to help you craft perfect anagrams.
           </p>
+
+          {/* Interactive Suggestion */}
+          {suggestion && (
+            <div className="mt-6 inline-flex items-center gap-2 bg-slate-900/40 border border-slate-800/80 px-4 py-2 rounded-full text-xs sm:text-sm text-slate-400 shadow-md">
+              💡 Not sure how it works? Try{' '}
+              <button
+                onClick={handleLoadSuggestion}
+                className="text-indigo-400 hover:text-indigo-300 font-bold underline decoration-indigo-400/40 active:scale-95 transition cursor-pointer"
+              >
+                "{suggestion.left}"
+              </button>{' '}
+              and figure out its anagram.
+              <button
+                onClick={selectRandomSuggestion}
+                className="text-slate-500 hover:text-slate-300 ml-1 active:scale-95 transition font-semibold"
+                title="Show another example"
+              >
+                🎲 Next
+              </button>
+            </div>
+          )}
         </header>
 
         {/* Toolbar */}
@@ -66,14 +194,14 @@ function App() {
           <button
             onClick={handleSwap}
             disabled={!leftText && !rightText}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-850 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-xl text-sm font-medium hover:bg-slate-850 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
           >
             <span>🔄 Swap Phrases</span>
           </button>
           <button
             onClick={handleClear}
             disabled={!leftText && !rightText}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-red-950/40 hover:border-red-900/60 text-red-400 rounded-xl text-sm font-medium hover:bg-red-950/20 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-red-950/40 hover:border-red-900/60 text-red-400 rounded-xl text-sm font-medium hover:bg-red-950/20 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
           >
             <span>🗑️ Clear All</span>
           </button>
@@ -111,7 +239,7 @@ function App() {
                 {leftMissing.length > 0 && (
                   <button
                     onClick={() => handleShuffle('left')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-medium transition active:scale-95"
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-medium transition active:scale-95 cursor-pointer"
                   >
                     🎲 Shuffle
                   </button>
@@ -164,7 +292,7 @@ function App() {
                 {rightMissing.length > 0 && (
                   <button
                     onClick={() => handleShuffle('right')}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-medium transition active:scale-95"
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-medium transition active:scale-95 cursor-pointer"
                   >
                     🎲 Shuffle
                   </button>
@@ -176,7 +304,7 @@ function App() {
                   rightMissing.map((char, index) => (
                     <span
                       key={`${char}-${index}`}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-950/30 border border-blue-500/20 text-blue-450 font-mono font-bold text-lg select-all"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-950/30 border border-blue-500/20 text-blue-455 font-mono font-bold text-lg select-all"
                     >
                       {char}
                     </span>
@@ -189,20 +317,98 @@ function App() {
           </div>
         </main>
 
-        {/* Status Message */}
+        {/* Status & Save Area */}
         {isMatched && (
-          <div className="relative animate-bounce mb-8">
-            <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-2xl"></div>
-            <div className="relative bg-emerald-950/40 border-2 border-dashed border-emerald-500/40 text-emerald-400 text-center font-extrabold text-xl sm:text-2xl p-6 rounded-2xl">
-              ✨ PERFECT ANAGRAM MATCH! ✨
+          <div className="relative mb-10 overflow-hidden rounded-2xl bg-slate-900/40 border border-emerald-500/30 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-emerald-950/20">
+            <div className="absolute inset-0 bg-emerald-500/[0.02] pointer-events-none"></div>
+            <div>
+              <h3 className="text-emerald-400 font-extrabold text-lg sm:text-xl flex items-center gap-2">
+                ✨ PERFECT ANAGRAM MATCH! ✨
+              </h3>
+              <p className="text-slate-400 text-xs sm:text-sm mt-1">
+                Both phrases contain the exact same characters.
+              </p>
             </div>
+            {!isSaved && (
+              <button
+                onClick={handleSavePair}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95 bg-emerald-500 hover:bg-emerald-600 text-slate-950"
+              >
+                💾 Save Pair
+              </button>
+            )}
           </div>
+        )}
+
+        {/* Collection Toggle Button */}
+        <div className="flex justify-center mb-8">
+          <button
+            onClick={() => setShowList(!showList)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95"
+          >
+            <span>{showList ? '🙈 Hide Collection' : `📚 View Collection (${savedPairs.length})`}</span>
+          </button>
+        </div>
+
+        {/* Anagram Collection */}
+        {showList && (
+          <section className="bg-slate-900/25 border border-slate-800/80 rounded-2xl p-6 shadow-xl animate-fade-in">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold uppercase tracking-wider text-slate-350 flex items-center gap-2">
+                📚 Anagram Collection
+              </h2>
+              {savedPairs.length > 0 && (
+                <button
+                  onClick={handleExportText}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-450 hover:text-white rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer"
+                >
+                  📥 Export (.txt)
+                </button>
+              )}
+            </div>
+            {savedPairs.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {savedPairs.map((pair) => {
+                  const uniqueKey = getContractedKey(pair.left)
+                  return (
+                    <div
+                      key={uniqueKey}
+                      onClick={() => handleLoadPair(pair)}
+                      className="bg-slate-950/40 border border-slate-800/80 hover:border-indigo-500/35 hover:bg-slate-900/40 px-4 py-3 rounded-xl cursor-pointer group flex justify-between items-center transition duration-200"
+                    >
+                      <div className="flex-1 min-w-0 pr-2">
+                        <div className="text-sm font-medium text-slate-300 group-hover:text-white truncate">
+                          {pair.left}
+                        </div>
+                        <div className="text-xs text-slate-500 group-hover:text-slate-400 truncate mt-0.5">
+                          {pair.right}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => handleDeletePair(pair, e)}
+                          className="p-1.5 text-slate-600 hover:text-red-400 rounded-lg hover:bg-slate-900 transition cursor-pointer"
+                          title="Delete from collection"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-slate-500 italic text-sm">
+                Your collection is empty. Match and save some anagrams!
+              </div>
+            )}
+          </section>
         )}
 
       </div>
 
       {/* Footer */}
-      <footer className="mt-12 text-center text-xs text-slate-500 space-y-3">
+      <footer className="mt-16 text-center text-xs text-slate-500 space-y-3">
         <p className="max-w-md mx-auto leading-relaxed text-slate-600">
           Letter Balance Engine compares alphanumeric characters case-insensitively, ignoring spaces and symbols.
         </p>

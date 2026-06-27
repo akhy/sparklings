@@ -74,3 +74,11 @@ export function shuffleArray<T>(array: T[]): T[] {
   }
   return result
 }
+
+/**
+ * Returns a normalized, sorted representation of the alphanumeric characters of a string.
+ * This represents the "contracted letters" signature of the string.
+ */
+export function getContractedKey(str: string): string {
+  return str.toUpperCase().replace(/[^A-Z0-9]/g, '').split('').sort().join('')
+}
