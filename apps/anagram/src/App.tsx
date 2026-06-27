@@ -27,6 +27,18 @@ function App() {
   const [isSuggestionVisible, setIsSuggestionVisible] = useState(true)
   const [tourStep, setTourStep] = useState<number | null>(null)
 
+  // Responsive layout state
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // 768px matches md breakpoint
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   // Load saved pairs & handle seeding
   useEffect(() => {
     try {
@@ -250,13 +262,13 @@ function App() {
         {/* Layout Grid */}
         <main className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           
-          {/* LEFT PANEL */}
+          {/* LEFT/TOP PANEL */}
           <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 relative transition hover:border-slate-700/60 shadow-xl">
             <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-red-500 to-pink-500 rounded-t-2xl"></div>
             
             <div className="flex justify-between items-center mb-3">
               <label htmlFor="leftInput" className="text-sm font-bold tracking-wide uppercase text-red-400">
-                Left Phrase
+                {isMobile ? 'Top Phrase' : 'Left Phrase'}
               </label>
               <span className="text-xs font-semibold text-slate-500">
                 {getCleanLength(leftText)} chars
@@ -274,7 +286,7 @@ function App() {
             <div className="mt-6 space-y-3">
               <div className="flex justify-between items-center min-h-[28px]">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Missing from Left <span className="text-slate-600">(to match Right)</span>:
+                  Missing from {isMobile ? 'Top' : 'Left'} <span className="text-slate-600">(to match {isMobile ? 'Bottom' : 'Right'})</span>:
                 </span>
                 {leftMissing.length > 0 && (
                   <button
@@ -287,7 +299,7 @@ function App() {
                 )}
               </div>
 
-              {/* Step 3 Tour Wrapper (Left Missing Pool) */}
+              {/* Step 3 Tour Wrapper (Left/Top Missing Pool) */}
               <div className="relative">
                 <div id="leftMissing" className="bg-slate-950/60 border border-slate-800/50 rounded-xl p-4 min-h-[72px] flex items-center justify-center flex-wrap gap-2">
                   {leftMissing.length > 0 ? (
@@ -315,9 +327,9 @@ function App() {
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                         </span>
                       </div>
-                      <h4 className="text-sm font-bold text-white">🎯 Left Character Pool</h4>
+                      <h4 className="text-sm font-bold text-white">🎯 {isMobile ? 'Top' : 'Left'} Character Pool</h4>
                       <p className="text-xs text-slate-350 leading-relaxed">
-                        This shows the letters missing from the left side to match what is typed on the right. If you type extra letters on the right, they will appear here!
+                        This shows the letters missing from the {isMobile ? 'top' : 'left'} side to match what is typed on the {isMobile ? 'bottom' : 'right'}. If you type extra letters on the {isMobile ? 'bottom' : 'right'}, they will appear here!
                       </p>
                       <div className="flex justify-between items-center pt-2">
                         <button
@@ -341,13 +353,13 @@ function App() {
             </div>
           </div>
 
-          {/* RIGHT PANEL */}
+          {/* RIGHT/BOTTOM PANEL */}
           <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl p-6 relative transition hover:border-slate-700/60 shadow-xl">
             <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-t-2xl"></div>
             
             <div className="flex justify-between items-center mb-3">
               <label htmlFor="rightInput" className="text-sm font-bold tracking-wide uppercase text-blue-400">
-                Right Phrase
+                {isMobile ? 'Bottom Phrase' : 'Right Phrase'}
               </label>
               <span className="text-xs font-semibold text-slate-500">
                 {getCleanLength(rightText)} chars
@@ -375,9 +387,9 @@ function App() {
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
                       </span>
                     </div>
-                    <h4 className="text-sm font-bold text-white">✍️ Right Phrase Field</h4>
+                    <h4 className="text-sm font-bold text-white">✍️ {isMobile ? 'Bottom' : 'Right'} Phrase Field</h4>
                     <p className="text-xs text-slate-350 leading-relaxed">
-                      Type your anagram in this field. Your goal is to write a phrase that uses the exact same characters as the left phrase.
+                      Type your anagram in this field. Your goal is to write a phrase that uses the exact same characters as the {isMobile ? 'top' : 'left'} phrase.
                     </p>
                     <div className="flex justify-between items-center pt-2">
                       <button
@@ -402,7 +414,7 @@ function App() {
             <div className="mt-6 space-y-3">
               <div className="flex justify-between items-center min-h-[28px] relative">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Missing from Right <span className="text-slate-600">(to match Left)</span>:
+                  Missing from {isMobile ? 'Bottom' : 'Right'} <span className="text-slate-600">(to match {isMobile ? 'Top' : 'Left'})</span>:
                 </span>
                 
                 {/* Step 4 Tour Wrapper around Shuffle Button */}
@@ -484,7 +496,7 @@ function App() {
                       </div>
                       <h4 className="text-sm font-bold text-white">🎯 Missing Character Pool</h4>
                       <p className="text-xs text-slate-350 leading-relaxed">
-                        This shows the letters that are missing from the right side to match the left. Your objective is to type these letters until this list is completely empty!
+                        This shows the letters that are missing from the {isMobile ? 'bottom' : 'right'} side to match the {isMobile ? 'top' : 'left'}. Your objective is to type these letters until this list is completely empty!
                       </p>
                       <div className="flex justify-between items-center pt-2">
                         <button
@@ -537,7 +549,7 @@ function App() {
                 onClick={handleSavePair}
                 className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95 ${
                   isSameOrder 
-                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950' 
+                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-955' 
                     : 'bg-emerald-500 hover:bg-emerald-600 text-slate-950'
                 }`}
               >
@@ -552,7 +564,7 @@ function App() {
         <div className="flex justify-center mb-8">
           <button
             onClick={() => setShowList(!showList)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-350 hover:text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95"
+            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white rounded-xl text-sm font-bold shadow-md cursor-pointer transition active:scale-95"
           >
             <Library className="w-4 h-4 text-indigo-400" />
             <span>{showList ? 'Hide Collection' : `View Collection (${savedPairs.length})`}</span>
