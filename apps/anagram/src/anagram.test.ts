@@ -77,8 +77,8 @@ describe('anagram helpers', () => {
 
   describe('getContractedKey', () => {
     it('should return sorted uppercase alphanumeric characters', () => {
-      expect(getContractedKey('Tom Marvolo Riddle')).toBe('ADEILLMMOORRTVY')
-      expect(getContractedKey('I am Lord Voldemort')).toBe('ADEILLMMOORRTVY')
+      expect(getContractedKey('Tom Marvolo Riddle')).toBe('ADDEILLMMOOORRTV')
+      expect(getContractedKey('I am Lord Voldemort')).toBe('ADDEILLMMOOORRTV')
       expect(getContractedKey('Astronomer')).toBe('AEMNOORRST')
       expect(getContractedKey('Moon starer')).toBe('AEMNOORRST')
     })
