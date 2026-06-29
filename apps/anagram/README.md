@@ -9,10 +9,9 @@ Anagram Engine is a web-based utility designed to help users invent anagrams by 
 ## Features
 
 - ⚖️ **Live Letter Balance**: Real-time evaluation of character counts showing exactly which letters are missing from the top/left to match the bottom/right and vice-versa.
-- 🎓 **Guided Onboarding Tour**: A 4-step wizard tool-tour explaining inputs, pools, and controls, featuring smooth viewport scrolling.
+- 🎓 **Guided Onboarding Tour**: A 4-step wizard tour explaining inputs, pools, and controls.
 - 🎲 **Smart Scrambling**: Shuffle controls to randomize remaining character pools, helping trigger word recognition.
 - 💾 **Local Collection**: LocalStorage-backed database to save, load, and delete matched anagram pairs.
-- 🤨 **Cheeky Safety Warnings**: Alerts you if the two cleaned inputs contain the exact same character order (i.e. simple copycat inputs).
 - 📤 **Export Collection**: Download your saved list of anagrams as a local `.txt` file.
 
 ## Development
